@@ -35,6 +35,11 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Inicialização do FluxGarage RoboEyes
 RoboEyes<Adafruit_SSD1306> roboEyes(display);
 
+// LED RGB On-board do ESP32-S3 (GPIO 48 no DevKitC-1)
+#ifndef RGB_BUILTIN
+#define RGB_BUILTIN 48
+#endif
+
 // Estados de Exibição
 bool showingText = false;
 unsigned long textStartTime = 0;
@@ -45,20 +50,45 @@ float bbas3Price = 28.45;
 float bbas3Change = 1.82;
 unsigned long lastStockCheckTime = 0;
 
-// Ajuste fino dos LEDs
+// Ajuste fino dos LEDs (externos e interno do ESP32)
 void setLedsColor(uint8_t r, uint8_t g, uint8_t b, uint8_t scale = 255) {
     analogWrite(PIN_LED_VERMELHO, (r * scale) / 255);
     analogWrite(PIN_LED_AMARELO,  (((g > 0 && r > 0 ? 180 : 0)) * scale) / 255);
     analogWrite(PIN_LED_VERDE,    (g * scale) / 255);
+    // Ativa o LED RGB On-board do ESP32-S3 (GPIO 48)
+    neopixelWrite(RGB_BUILTIN, (r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
+}
+
+// 3 Piscadas Verdes: Wi-Fi Conectado com sucesso
+void blinkWifiConnected() {
+    Serial.println("[LED ESP32] 3 Piscadas Verdes: Wi-Fi Conectado!");
+    for (int i = 0; i < 3; i++) {
+        neopixelWrite(RGB_BUILTIN, 0, 220, 0); // Verde forte no ESP32
+        analogWrite(PIN_LED_VERDE, 255);       // Verde externo
+        delay(180);
+        neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+        analogWrite(PIN_LED_VERDE, 0);
+        delay(180);
+    }
+}
+
+// 1 Piscada Azul: Resposta da API IA recebida com sucesso (OK)
+void blinkApiOk() {
+    Serial.println("[LED ESP32] 1 Piscada Azul: API Gemini IA OK!");
+    neopixelWrite(RGB_BUILTIN, 0, 0, 255); // Azul forte no ESP32
+    delay(450);
+    neopixelWrite(RGB_BUILTIN, 0, 0, 0);
 }
 
 void flashLeds(int count, int delayMs, bool isGreen) {
     for (int i = 0; i < count; i++) {
         analogWrite(isGreen ? PIN_LED_VERDE : PIN_LED_VERMELHO, 255);
         analogWrite(isGreen ? PIN_LED_VERMELHO : PIN_LED_VERDE, 0);
+        neopixelWrite(RGB_BUILTIN, isGreen ? 0 : 255, isGreen ? 255 : 0, 0);
         delay(delayMs);
         analogWrite(PIN_LED_VERDE, 0);
         analogWrite(PIN_LED_VERMELHO, 0);
+        neopixelWrite(RGB_BUILTIN, 0, 0, 0);
         delay(delayMs);
     }
 }
@@ -224,6 +254,7 @@ void askGemini(String userQuery) {
 
         int httpCode = https.POST(reqBody);
         if (httpCode == HTTP_CODE_OK) {
+            blinkApiOk(); // 1 piscada azul: API IA respondeu com sucesso!
             String respStr = https.getString();
             JsonDocument docResp;
             if (!deserializeJson(docResp, respStr)) {
@@ -314,7 +345,7 @@ void setup() {
 
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println("[Wi-Fi] Conectado! IP: " + WiFi.localIP().toString());
-        flashLeds(2, 60, true);
+        blinkWifiConnected(); // 3 piscadas verdes no LED do ESP32!
         roboEyes.setMood(HAPPY);
         roboEyes.anim_laugh();
     } else {

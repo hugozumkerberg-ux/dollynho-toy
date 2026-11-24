@@ -12,6 +12,14 @@ O **Dollynho Toy** é um robô assistente de mesa interativo baseado no microcon
   - Animação a 50 FPS de olhinhos no estilo *Cozmo / WALL-E*.
   - Piscamento natural automático (`autoblinker`) e olhar curioso em direções aleatórias (`idleMode`).
   - Estados emocionais: **Feliz (`HAPPY`)**, **Bravo (`ANGRY`)**, **Sonolento/Preocupado (`TIRED`)**, **Normal (`DEFAULT`)**, **Gargalhada (`anim_laugh`)**, **Dúvida/Curiosidade (`anim_confused`)** e suor na testa (`setSweat`).
+- **💡 Sistema Inteligente de LEDs (Externos + On-Board RGB do ESP32):**
+  - **LED RGB On-Board (GPIO 48) ativado:**
+    - 💚 **3 piscadas verdes:** Wi-Fi conectado com sucesso!
+    - 💙 **1 piscada azul:** Resposta recebida da API Gemini IA (OK)!
+  - **Bochechas de Expressão:**
+    - LED Verde (GPIO 4): Humor Feliz e BBAS3 em alta na B3.
+    - LED Vermelho (GPIO 6): Humor Triste/Bravo e BBAS3 em queda.
+    - Controle de intensidade analógico em tempo real via potenciômetro.
 - **📈 Monitor da Bolsa B3 (BBAS3 - Banco do Brasil):**
   - Consulta automática via Wi-Fi a cada 5 minutos.
   - Se a ação subir: **LED Verde pisca** + comemoração 8-bit + olhos felizes.

@@ -599,6 +599,82 @@
                         <strong style="color: var(--accent-cyan);">🟦 LINHAS 1 A 22: ESP32-S3 DevKit</strong><br>
                         <span style="font-size: 0.82rem; color: #cbd5e1;">
                             • Encaixe a placa centralizada no canal divisor central (linhas 1 a 22).<br>
+                            • <strong>LED On-Board RGB (GPIO 48):</strong> ATIVADO!<br>
+                            &nbsp;&nbsp;💚 <strong>3 piscadas verdes:</strong> Wi-Fi conectado com sucesso.<br>
+                            &nbsp;&nbsp;💙 <strong>1 piscada azul:</strong> Resposta da API IA Gemini OK.<br>
+                            • <strong>Linha 1 (Esquerda):</strong> Pino 3V3 ➔ Fio Vermelho para o trilho <strong>(+)</strong>.<br>
+                            • <strong>Linha 3 (Esquerda):</strong> GPIO 4 ➔ Jumper para Linha 33 (LED Verde).<br>
+                            • <strong>Linha 5 (Esquerda):</strong> GPIO 6 ➔ Jumper para Linha 38 (LED Vermelho).<br>
+                            • <strong>Linha 7 (Esquerda):</strong> GPIO 15 ➔ Jumper para Linha 50 (Buzzer +).<br>
+                            • <strong>Linha 11 (Esquerda):</strong> GPIO 8 (SDA) ➔ Jumper Azul para Linha 29.<br>
+                            • <strong>Linha 14 (Esquerda):</strong> GPIO 9 (SCL) ➔ Jumper Amarelo para Linha 28.<br>
+                            • <strong>Linha 21 (Esquerda):</strong> GND ➔ Fio Preto para o trilho <strong>(-)</strong>.<br>
+                            • <strong>Linha 4 (Direita):</strong> GPIO 1 ➔ Jumper Roxo para Linha 45 (Potenciômetro).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-yellow); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-yellow);">📟 LINHAS 26 A 29: Tela OLED SSD1306</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • Encaixe o módulo OLED de 4 pinos nas colunas b, c ou d:<br>
+                            • <strong>Linha 26:</strong> Pino VCC ➔ Fio Vermelho para trilho <strong>(+)</strong> (3.3V).<br>
+                            • <strong>Linha 27:</strong> Pino GND ➔ Fio Preto para trilho <strong>(-)</strong> (GND).<br>
+                            • <strong>Linha 28:</strong> Pino SCL ➔ Conectado à Linha 14 (GPIO 9 SCL).<br>
+                            • <strong>Linha 29:</strong> Pino SDA ➔ Conectado à Linha 11 (GPIO 8 SDA).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-green); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-green);">🟢 LINHAS 33 A 35: LED Verde (Alta B3 / Feliz)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 33:</strong> Resistor 220Ω (da Linha 33 até Linha 34).<br>
+                            • <strong>Linha 33:</strong> Jumper vindo da Linha 3 (GPIO 4).<br>
+                            • <strong>Linha 34:</strong> Perna longa do LED Verde (+ Ânodo).<br>
+                            • <strong>Linha 35:</strong> Perna curta do LED (- Cátodo) ➔ Fio Preto para trilho <strong>(-)</strong>.
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-red); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-red);">🔴 LINHAS 38 A 40: LED Vermelho (Queda B3 / Triste)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 38:</strong> Resistor 220Ω (da Linha 38 até Linha 39).<br>
+                            • <strong>Linha 38:</strong> Jumper vindo da Linha 5 (GPIO 6).<br>
+                            • <strong>Linha 39:</strong> Perna longa do LED Vermelho (+ Ânodo).<br>
+                            • <strong>Linha 40:</strong> Perna curta do LED (- Cátodo) ➔ Fio Preto para trilho <strong>(-)</strong>.
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-purple); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-purple);">🎛️ LINHAS 44 A 46: Potenciômetro (Ajuste Brilho)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 44:</strong> Terminal 1 ➔ Fio Vermelho para trilho <strong>(+)</strong> (3.3V).<br>
+                            • <strong>Linha 45:</strong> Terminal Central (Cursor) ➔ Fio Roxo para Linha 4 (GPIO 1).<br>
+                            • <strong>Linha 46:</strong> Terminal 3 ➔ Fio Preto para trilho <strong>(-)</strong> (GND).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid #fff; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #fff;">🔊 LINHAS 50 A 52: Buzzer Piezoelétrico</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 50:</strong> Terminal Positivo (+) ➔ Fio Branco para Linha 7 (GPIO 15).<br>
+                            • <strong>Linha 52:</strong> Terminal Negativo (-) ➔ Fio Preto para trilho <strong>(-)</strong> (GND).<br>
+                            • <strong>Linhas 53 a 60:</strong> Espaço livre para expansão (microfone I2S ou servos!).
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mapa Visual Linha a Linha da Protoboard -->
+            <div style="background: #090d16; border: 2px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                <h3 style="color: var(--accent-cyan); font-size: 1rem; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    📋 Mapa de Alocação das 60 Linhas da Protoboard
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-cyan); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-cyan);">🟦 LINHAS 1 A 22: ESP32-S3 DevKit</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • Encaixe a placa centralizada no canal divisor central (linhas 1 a 22).<br>
                             • <strong>Linha 1 (Esquerda):</strong> Pino 3V3 ➔ Fio Vermelho para o trilho <strong>(+)</strong>.<br>
                             • <strong>Linha 3 (Esquerda):</strong> GPIO 4 ➔ Jumper para Linha 33 (LED Verde).<br>
                             • <strong>Linha 5 (Esquerda):</strong> GPIO 6 ➔ Jumper para Linha 38 (LED Vermelho).<br>
