@@ -7,6 +7,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <FluxGarage_RoboEyes.h>
+#include <time.h>
 #include "config_robot.h"
 #include "pitches.h"
 #include "songs_8bit.h"
@@ -50,6 +51,29 @@ unsigned long textDuration = 6000;
 float bbas3Price = 28.45;
 float bbas3Change = 1.82;
 unsigned long lastStockCheckTime = 0;
+
+// Variáveis e Controle de Horário e Status Bar OLED
+char manualTimeStr[10] = "";
+bool hasManualTime = false;
+unsigned long lastStatusBarTime = 0;
+
+const char* getTimeString() {
+    static char buf[10] = "12:00";
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo, 10)) {
+        strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
+        return buf;
+    }
+    if (hasManualTime && strlen(manualTimeStr) >= 5) {
+        return manualTimeStr;
+    }
+    // Fallback: calcula minutos desde o boot
+    unsigned long totalSec = millis() / 1000;
+    unsigned long min = (totalSec / 60) % 60;
+    unsigned long hr = (totalSec / 3600) % 24;
+    snprintf(buf, sizeof(buf), "%02lu:%02lu", hr, min);
+    return buf;
+}
 
 // Ajuste fino dos LEDs (externos e interno do ESP32)
 void setLedsColor(uint8_t r, uint8_t g, uint8_t b, uint8_t scale = 255) {
@@ -426,15 +450,18 @@ void setup() {
         display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
     }
 
-    // Inicialização do RoboEyes
+    // Inicialização do RoboEyes com tamanho ajustado para a barra de status
     roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 50);
-    roboEyes.setWidth(36, 36);
-    roboEyes.setHeight(36, 36);
+    roboEyes.setWidth(34, 34);
+    roboEyes.setHeight(30, 30);
     roboEyes.setBorderradius(8, 8);
     roboEyes.setSpacebetween(10);
     roboEyes.setCuriosity(ON);
     roboEyes.setAutoblinker(ON, 3, 2);
     roboEyes.setIdleMode(ON, 2, 2);
+
+    // Sincronização de horário NTP com fuso horário de Brasília (UTC-3)
+    configTime(-3 * 3600, 0, "pool.ntp.org", "time.google.com");
 
     // Modo Wi-Fi Híbrido: Conecta no Roteador (STA) e cria Rede Própria (AP)
     WiFi.mode(WIFI_AP_STA);
@@ -472,7 +499,13 @@ void loop() {
             showingText = false;
         }
     } else {
+        unsigned long prevTimer = roboEyes.fpsTimer;
         roboEyes.update();
+        if (roboEyes.fpsTimer != prevTimer || (now - lastStatusBarTime > 1000)) {
+            lastStatusBarTime = now;
+            drawStatusBar(display, WiFi.status() == WL_CONNECTED, WiFi.RSSI(), getTimeString());
+            display.display();
+        }
     }
 
     // Consulta periódica da BBAS3 a cada 5 minutos
@@ -486,7 +519,16 @@ void loop() {
         String cmd = Serial.readStringUntil('\n');
         cmd.trim();
 
-        if (cmd == "1" || cmd == "happy") { roboEyes.setMood(HAPPY); play8BitCoin(); }
+        if (cmd.startsWith("time:")) {
+            String t = cmd.substring(5);
+            t.trim();
+            if (t.length() >= 5) {
+                strncpy(manualTimeStr, t.c_str(), sizeof(manualTimeStr) - 1);
+                hasManualTime = true;
+                Serial.printf("[Relógio] Hora atualizada pelo site/computador: %s\n", manualTimeStr);
+            }
+        }
+        else if (cmd == "1" || cmd == "happy") { roboEyes.setMood(HAPPY); play8BitCoin(); }
         else if (cmd == "2" || cmd == "angry") { roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL); }
         else if (cmd == "3" || cmd == "tired") { roboEyes.setMood(TIRED); buzzerTone(NOTE_FS4); delay(250); buzzerNoTone(); ledsOff(); }
         else if (cmd == "4" || cmd == "default") { roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); ledsOff(); }

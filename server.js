@@ -74,6 +74,14 @@ function initSerial() {
                 isConnected = true;
                 console.log(`[SERIAL] Conectado com sucesso ao ESP32 em ${portPath}!`);
                 addLog(`[SISTEMA] Conectado com sucesso ao ESP32 (${portPath} @ ${SERIAL_BAUD}bps)`, 'system');
+
+                // Envia a hora atual para sincronizar o visor OLED do robô
+                setTimeout(() => {
+                    const now = new Date();
+                    const hh = String(now.getHours()).padStart(2, '0');
+                    const mm = String(now.getMinutes()).padStart(2, '0');
+                    sendToEsp32(`time:${hh}:${mm}`);
+                }, 1500);
             });
 
             parser.on('data', (line) => {

@@ -296,4 +296,51 @@ inline void drawSennaScene(int step, Adafruit_SSD1306 &disp) {
     disp.display();
 }
 
+// -------------------------------------------------------------
+// Barra de Status Superior do OLED: Sinal de Wi-Fi e Hora
+// -------------------------------------------------------------
+inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr) {
+    // Faixa superior de 11 pixels para a barra
+    disp.fillRect(0, 0, 128, 11, SSD1306_BLACK);
+
+    // 1. Ícone do Wi-Fi (Barras de intensidade de sinal)
+    int bars = 1;
+    if (isWifiConnected) {
+        if (rssi >= -60) bars = 4;
+        else if (rssi >= -70) bars = 3;
+        else if (rssi >= -80) bars = 2;
+        else bars = 1;
+    } else {
+        bars = 0; // Desconectado / Modo AP
+    }
+
+    // Desenha as 4 barras de sinal
+    disp.fillRect(2, 7, 2, 3, (bars >= 1) ? SSD1306_WHITE : SSD1306_BLACK);
+    if (bars < 1) disp.drawPixel(2, 9, SSD1306_WHITE);
+    disp.fillRect(5, 5, 2, 5, (bars >= 2) ? SSD1306_WHITE : SSD1306_BLACK);
+    disp.fillRect(8, 3, 2, 7, (bars >= 3) ? SSD1306_WHITE : SSD1306_BLACK);
+    disp.fillRect(11, 1, 2, 9, (bars >= 4) ? SSD1306_WHITE : SSD1306_BLACK);
+
+    // Texto de status do Wi-Fi ao lado do ícone
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(16, 2);
+    if (isWifiConnected) {
+        disp.print("WiFi");
+    } else {
+        disp.print("AP");
+    }
+
+    // 2. Hora no canto direito (ex: "04:55" ou "12:30")
+    if (timeStr && strlen(timeStr) > 0) {
+        disp.setCursor(96, 2);
+        disp.print(timeStr);
+    }
+
+    // 3. Linha divisória pontilhada sutil separando a barra dos olhos
+    for (int x = 0; x < 128; x += 3) {
+        disp.drawPixel(x, 11, SSD1306_WHITE);
+    }
+}
+
 #endif // GRAPHICS_OLED_H

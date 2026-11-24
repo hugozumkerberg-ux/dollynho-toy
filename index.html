@@ -845,6 +845,7 @@
                 <span>🔌</span> <span id="btnWebSerialText">Conectar USB</span>
             </button>
             <div class="badge online" id="esp32Badge">● ESP32: Conectando...</div>
+            <div class="badge online" id="esp32Badge">● ESP32: Conectando...</div>
             <div class="badge online">● Wi-Fi: Apto 1412 (OK)</div>
             <div class="badge b3">● B3: BBAS3 Ativa</div>
             <div class="badge" id="hudCoinBadge" onclick="play8Bit('coin')" style="background:#451a03; color:#fef08a; border:1px solid #eab308; cursor:pointer;" title="Clique para pegar uma moeda do Mario!">
@@ -1038,6 +1039,59 @@
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button class="quick-cmd-btn" id="terminalWebSerialBtn" onclick="toggleWebSerial()" style="background:#0284c7; color:#fff; border-color:#38bdf8; font-weight:bold;">🔌 Conectar USB Direto</button>
+                    <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● COM8 @ 115200</span>
+                    <button onclick="clearTerminalLogs()" style="background:#1e293b; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Limpar janela do terminal">Limpar 🗑️</button>
+                </div>
+            </div>
+
+            <div class="terminal-container">
+                <!-- Pílulas de Comandos Rápidos -->
+                <div>
+                    <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px;">Comandos Rápidos para Enviar ao ESP32:</div>
+                    <div class="quick-cmd-bar">
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('senna')">🏎️ Ayrton Senna</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('imperial')">⚔️ Star Wars Marcha</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('starwars')">🚀 Star Wars Principal</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('mario')">🍄 Super Mario</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tetris')">🧱 Tetris</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('coin')">🪙 Moeda Mario</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('happy')">😊 Humor Feliz</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('angry')">😠 Humor Bravo</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tired')">😴 Cansado</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('laugh')">😂 Risada</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('bbas3')">📈 Cotação BBAS3</button>
+                    </div>
+                </div>
+
+                <!-- Janela de Visualização de Logs -->
+                <div class="terminal-box" id="terminalLogBox">
+                    <div class="terminal-line"><span class="terminal-time">--:--:--</span><span class="terminal-log-system">[SISTEMA] Conectando ao terminal de logs do ESP32 via SSE...</span></div>
+                </div>
+
+                <!-- Barra de Envio de Comando Manual -->
+                <div class="terminal-input-bar">
+                    <input type="text" class="terminal-input" id="terminalCmdInput" placeholder="Digite um comando para o ESP32 (ex: senna, mario, happy, bbas3, ou uma pergunta pro Gemini)..." onkeydown="if(event.key==='Enter') executeTerminalInput()">
+                    <button class="btn-terminal-send" onclick="executeTerminalInput()">Enviar ➔</button>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b;">
+                    💡 Dica: Qualquer texto livre digitado acima é automaticamente repassado para a IA Gemini pelo ESP32 caso não seja um comando de música ou emoção.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba: Terminal & Logs ESP32 em Tempo Real -->
+    <div id="section-terminal" class="tab-pane" style="display: none;">
+        <div class="card" style="width: 100%;">
+            <div class="card-title">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">📟</span>
+                    <div>
+                        <div style="font-weight: 800; color: var(--accent-cyan);">Terminal Serial & Logs do ESP32-S3 em Tempo Real</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; font-weight: normal;">Comunicação bidirecional direta via porta Serial (COM8) • Stream SSE sem recarregar a página</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
                     <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● COM8 @ 115200</span>
                     <button onclick="clearTerminalLogs()" style="background:#1e293b; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Limpar janela do terminal">Limpar 🗑️</button>
                 </div>
@@ -1820,6 +1874,44 @@
             ctx.fillStyle = '#38bdf8';
             ctx.font = '12px monospace';
             ctx.fillText(`${botName} | BBAS3: R$ 28,45 ▲`, 16, 118);
+
+            // Barra superior de status: Sinal de Wi-Fi e Hora
+            drawOledStatusBar();
+        }
+
+        function drawOledStatusBar() {
+            ctx.save();
+            ctx.shadowBlur = 0;
+            // Limpa a faixa superior de 22px
+            ctx.fillStyle = '#050a14';
+            ctx.fillRect(0, 0, 256, 22);
+
+            // 1. Ícone de Wi-Fi (4 barras estilo sinal)
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(10, 14, 3, 4);
+            ctx.fillRect(15, 11, 3, 7);
+            ctx.fillRect(20, 8, 3, 10);
+            ctx.fillRect(25, 5, 3, 13);
+
+            // Texto "Wi-Fi"
+            ctx.font = 'bold 11px Consolas, monospace';
+            ctx.fillText('Wi-Fi', 34, 15);
+
+            // 2. Hora no canto superior direito
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            ctx.font = 'bold 11px Consolas, monospace';
+            ctx.fillText(timeStr, 214, 15);
+
+            // 3. Linha divisória pontilhada sutil
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(0, 22);
+            ctx.lineTo(256, 22);
+            ctx.stroke();
+            ctx.restore();
         }
 
         function roundRect(ctx, x, y, width, height, radius) {
@@ -2712,6 +2804,12 @@
                 updateWebSerialUI(true);
                 appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), "[SISTEMA] Conectado ao ESP32 via Web Serial USB nativo (115200 baud)!", 'system');
                 readWebSerialStream();
+
+                // Sincroniza o relógio do robô imediatamente com a hora do computador
+                const now = new Date();
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mm = String(now.getMinutes()).padStart(2, '0');
+                setTimeout(() => sendEsp32Command(`time:${hh}:${mm}`), 1000);
             } catch (err) {
                 console.error("Falha ao abrir Web Serial:", err);
                 appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO] Falha ao conectar Web Serial: ${err.message}`, 'error');
@@ -2972,6 +3070,13 @@
         initSseLogs();
         checkEsp32Status();
         setInterval(checkEsp32Status, 3000);
+
+        // Atualiza relógio e barra superior a cada 1 segundo
+        setInterval(() => {
+            if (!songVisualInterval) {
+                drawOled();
+            }
+        }, 1000);
     </script>
 </body>
 </html>
