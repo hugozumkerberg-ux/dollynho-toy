@@ -160,12 +160,44 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
     roboEyes.update();
 }
 
-void play8BitCoin() {
-    tone(PIN_BUZZER, NOTE_B5, 80);
-    delay(80);
-    tone(PIN_BUZZER, NOTE_E6, 250);
-    delay(250);
+int totalCoinsCollected = 0;
+
+void notifyMarioCoin() {
+    totalCoinsCollected++;
+    showingText = true;
+    textStartTime = millis();
+    textDuration = 2200; // Mantém a notificação na tela por 2.2 segundos
+
+    Serial.printf("[Mario] 🪙 Moeda Coletada! Total: %d (+200 PTS)\n", totalCoinsCollected);
+    roboEyes.setMood(HAPPY);
+
+    // Primeiro tom agudo (B5) com brilho dourado nos LEDs
+    tone(PIN_BUZZER, NOTE_B5, 75);
+    analogWrite(PIN_LED_VERDE, 255);
+    rgbLedWrite(RGB_BUILTIN, 255, 215, 0); // Dourado brilhante no ESP32
+
+    for (int f = 0; f < 8; f++) {
+        drawMarioCoinNotification(f, totalCoinsCollected, display);
+        delay(28);
+    }
+
+    // Segundo tom (E6) no ápice do pulo com brilho verde
+    tone(PIN_BUZZER, NOTE_E6, 260);
+    analogWrite(PIN_LED_VERDE, 200);
+    rgbLedWrite(RGB_BUILTIN, 50, 255, 100);
+
+    for (int f = 8; f <= 15; f++) {
+        drawMarioCoinNotification(f, totalCoinsCollected, display);
+        delay(28);
+    }
+
     noTone(PIN_BUZZER);
+    analogWrite(PIN_LED_VERDE, 0);
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
+}
+
+void play8BitCoin() {
+    notifyMarioCoin();
 }
 
 // ----------------------------------------------------
@@ -411,6 +443,7 @@ void loop() {
         else if (cmd == "laugh") { roboEyes.anim_laugh(); play8BitCoin(); }
         else if (cmd == "confused") { roboEyes.anim_confused(); tone(PIN_BUZZER, NOTE_A5, 80); delay(80); noTone(PIN_BUZZER); }
         else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
+        else if (cmd == "coin" || cmd == "moeda") { notifyMarioCoin(); }
         
         // MÚSICAS COMPLETAS COM ANIMAÇÃO VISUAL
         else if (cmd == "starwars" || cmd == "sw") {

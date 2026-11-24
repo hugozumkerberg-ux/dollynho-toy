@@ -34,6 +34,23 @@ const unsigned char PROGMEM COIN_8x8[] = {
     0x3c, 0x7e, 0x66, 0x66, 0x66, 0x66, 0x7e, 0x3c
 };
 
+// Moeda Rotacionando (Fases de giro para notificação brilhante)
+const unsigned char PROGMEM COIN_ANIM_FRONT[] = {
+    0x3c, 0x00, 0x7e, 0x00, 0xff, 0x00, 0xdb, 0x00,
+    0xdb, 0x00, 0xdb, 0x00, 0xdb, 0x00, 0xdb, 0x00,
+    0xff, 0x00, 0x7e, 0x00, 0x3c, 0x00, 0x00, 0x00
+};
+const unsigned char PROGMEM COIN_ANIM_SIDE[] = {
+    0x18, 0x00, 0x3c, 0x00, 0x7e, 0x00, 0x66, 0x00,
+    0x66, 0x00, 0x66, 0x00, 0x66, 0x00, 0x66, 0x00,
+    0x7e, 0x00, 0x3c, 0x00, 0x18, 0x00, 0x00, 0x00
+};
+const unsigned char PROGMEM COIN_ANIM_EDGE[] = {
+    0x18, 0x00, 0x18, 0x00, 0x3c, 0x00, 0x3c, 0x00,
+    0x3c, 0x00, 0x3c, 0x00, 0x3c, 0x00, 0x3c, 0x00,
+    0x3c, 0x00, 0x18, 0x00, 0x18, 0x00, 0x00, 0x00
+};
+
 // -------------------------------------------------------------
 // Renderizador da Animação do Mario no OLED 128x64
 // -------------------------------------------------------------
@@ -124,6 +141,66 @@ inline void drawStarWarsScene(int step, const char* subtitle, Adafruit_SSD1306 &
     disp.setTextSize(1);
     disp.setCursor(14, 38);
     disp.print(subtitle);
+
+    disp.display();
+}
+
+// -------------------------------------------------------------
+// Notificação Especial: Moeda do Super Mario (+200 PTS) no OLED
+// -------------------------------------------------------------
+inline void drawMarioCoinNotification(int frame, int totalCoins, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Moldura estilo card retrô NES
+    disp.drawRoundRect(2, 2, 124, 60, 4, SSD1306_WHITE);
+    disp.drawFastHLine(6, 16, 116, SSD1306_WHITE);
+
+    // Cabeçalho da Notificação
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(18, 5);
+    disp.print("! MOEDA MARIO !");
+
+    // Bloco [?] central na parte inferior
+    int blockBump = (frame >= 1 && frame <= 4) ? (frame <= 2 ? -2 : -1) : 0;
+    disp.drawBitmap(58, 44 + blockBump, BLOCK_QUESTION_12x12, 12, 12, SSD1306_WHITE);
+
+    // Salto parabólico da moeda saindo do bloco
+    float progress = (float)frame / 14.0f;
+    if (progress > 1.0f) progress = 1.0f;
+    int coinY = 40 - (int)(sin(progress * 3.14159f) * 22);
+
+    // Animação de rotação da moeda
+    int spin = frame % 4;
+    const unsigned char* coinSprite = (spin == 0) ? COIN_ANIM_FRONT : ((spin == 1 || spin == 3) ? COIN_ANIM_SIDE : COIN_ANIM_EDGE);
+    disp.drawBitmap(59, coinY, coinSprite, 10, 12, SSD1306_WHITE);
+
+    // Estrelas cintilantes de brilho no ápice
+    if (frame >= 5 && frame <= 11) {
+        disp.drawPixel(50, coinY + 2, SSD1306_WHITE);
+        disp.drawPixel(51, coinY + 1, SSD1306_WHITE);
+        disp.drawPixel(51, coinY + 3, SSD1306_WHITE);
+        disp.drawPixel(52, coinY + 2, SSD1306_WHITE);
+
+        disp.drawPixel(76, coinY - 1, SSD1306_WHITE);
+        disp.drawPixel(77, coinY - 2, SSD1306_WHITE);
+        disp.drawPixel(77, coinY,     SSD1306_WHITE);
+        disp.drawPixel(78, coinY - 1, SSD1306_WHITE);
+    }
+
+    // Texto flutuante de pontuação "+200"
+    if (frame >= 3) {
+        int textY = 26 - (frame - 3);
+        if (textY < 19) textY = 19;
+        disp.setCursor(48, textY);
+        disp.print("+200");
+    }
+
+    // Placar inferior
+    disp.setCursor(8, 48);
+    disp.printf("x%02d", totalCoins);
+    disp.setCursor(82, 48);
+    disp.print("+1 COIN");
 
     disp.display();
 }

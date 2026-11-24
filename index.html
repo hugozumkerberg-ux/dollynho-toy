@@ -427,9 +427,83 @@
         .serial-bar button:hover { background: #0369a1; }
         .serial-status { font-size: 0.85rem; color: var(--text-muted); }
 
+        /* Notificação Especial: Moeda do Mario */
+        .mario-coin-toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            border: 2px solid #facc15;
+            box-shadow: 0 0 25px rgba(250, 204, 21, 0.45), 0 8px 32px rgba(0,0,0,0.6);
+            border-radius: 14px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #fff;
+            transform: translateY(-80px) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .mario-coin-toast.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .coin-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            background: #ca8a04;
+            border: 2px solid #fef08a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            animation: coinSpinPulse 0.6s infinite alternate ease-in-out;
+        }
+        @keyframes coinSpinPulse {
+            0% { transform: scale(1) rotateY(0deg); }
+            100% { transform: scale(1.15) rotateY(180deg); filter: drop-shadow(0 0 8px #fde047); }
+        }
+        .coin-toast-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #facc15;
+            text-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
+            font-family: monospace, sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .coin-toast-sub {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+        }
+        .coin-badge-count {
+            background: #854d0e;
+            color: #fef08a;
+            border: 1px solid #eab308;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- Toast de Notificação Moeda do Mario -->
+    <div id="marioCoinToast" class="mario-coin-toast">
+        <div class="coin-icon-wrapper">🪙</div>
+        <div>
+            <div class="coin-toast-title">+1 MOEDA! (+200 PTS)</div>
+            <div class="coin-toast-sub">Dollynho Toy capturou uma moeda do Mario!</div>
+        </div>
+        <div class="coin-badge-count">x<span id="toastCoinCount">1</span></div>
+    </div>
 
     <!-- Header Principal -->
     <header>
@@ -448,6 +522,9 @@
             <div class="badge online">● Wi-Fi: Apto 1412 (OK)</div>
             <div class="badge">● Porta: COM7</div>
             <div class="badge b3">● B3: BBAS3 Ativa</div>
+            <div class="badge" id="hudCoinBadge" onclick="play8Bit('coin')" style="background:#451a03; color:#fef08a; border:1px solid #eab308; cursor:pointer;" title="Clique para pegar uma moeda do Mario!">
+                🪙 Moedas: <strong id="hudCoinCount">0</strong>
+            </div>
         </div>
     </header>
 
@@ -1206,6 +1283,87 @@
             ctx.textAlign = 'left';
         }
 
+        let webMarioCoins = 0;
+        let coinToastTimeout = null;
+
+        function showMarioCoinToast() {
+            webMarioCoins++;
+            const hudEl = document.getElementById('hudCoinCount');
+            const toastEl = document.getElementById('toastCoinCount');
+            if (hudEl) hudEl.innerText = webMarioCoins;
+            if (toastEl) toastEl.innerText = webMarioCoins;
+
+            const toast = document.getElementById('marioCoinToast');
+            if (toast) {
+                toast.classList.add('show');
+                if (coinToastTimeout) clearTimeout(coinToastTimeout);
+                coinToastTimeout = setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2600);
+            }
+        }
+
+        function drawMarioCoinWebCanvas(step) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Moldura externa retrô
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            roundRect(ctx, 8, 8, 240, 112, 10);
+            ctx.stroke();
+
+            // Faixa de cabeçalho
+            ctx.fillStyle = '#facc15';
+            ctx.font = 'bold 13px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText("! NOTIFICACAO: MOEDA MARIO !", 128, 26);
+
+            // Bloco [?] na parte inferior
+            let blockY = 84;
+            if (step >= 1 && step <= 4) blockY -= 4;
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(114, blockY, 28, 28);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(114, blockY, 28, 28);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText("?", 128, blockY + 19);
+
+            // Salto parabólico da moeda saindo do bloco
+            let prog = Math.min(1, step / 14);
+            let coinY = 76 - Math.sin(prog * Math.PI) * 44;
+
+            ctx.font = '28px sans-serif';
+            ctx.fillText("🪙", 128, coinY);
+
+            // Efeito de brilho cintilante no ápice
+            if (step >= 5 && step <= 12) {
+                ctx.fillStyle = '#fde047';
+                ctx.font = 'bold 16px monospace';
+                ctx.fillText("✦", 96, coinY - 4);
+                ctx.fillText("✦", 160, coinY - 4);
+            }
+
+            // Texto flutuante de pontuação "+200 PTS"
+            if (step >= 3) {
+                let textY = Math.max(38, 54 - (step - 3) * 2);
+                ctx.fillStyle = '#4ade80';
+                ctx.font = 'bold 14px monospace';
+                ctx.fillText("+200 PTS", 128, textY);
+            }
+
+            // Placar inferior
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`MOEDAS: x${webMarioCoins.toString().padStart(2, '0')}`, 20, 108);
+            ctx.textAlign = 'right';
+            ctx.fillText("+1 COIN", 236, 108);
+            ctx.textAlign = 'left';
+        }
+
         let songVisualInterval = null;
 
         function startSongVisual(type, title, totalDurationMs) {
@@ -1217,8 +1375,10 @@
                     drawMarioWebCanvas(step);
                 } else if (type === 'starwars') {
                     drawStarWarsWebCanvas(step, title);
+                } else if (type === 'coin') {
+                    drawMarioCoinWebCanvas(step);
                 }
-            }, 60);
+            }, 55);
 
             setTimeout(() => {
                 if (songVisualInterval) {
@@ -1235,9 +1395,11 @@
             }
 
             if (song === 'coin') {
+                showMarioCoinToast();
                 playTone(987, 80, 'square', 0);
                 playTone(1318, 250, 'square', 80);
-                setTimeout(() => setLedColor('green'), 350);
+                setTimeout(() => setLedColor('green'), 80);
+                startSongVisual('coin', '', 2000);
             } else if (song === 'sadBeep') {
                 playTone(440, 160, 'sawtooth', 0);
                 playTone(370, 260, 'sawtooth', 160);
