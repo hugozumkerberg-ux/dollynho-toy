@@ -1331,6 +1331,10 @@
                 <div>
                     <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px;">Comandos Rápidos para Enviar ao ESP32:</div>
                     <div class="quick-cmd-bar">
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('chord')" style="border-color:#38bdf8; background:#075985;">🎶 Acorde Duplo</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('stereo')" style="border-color:#f59e0b; background:#78350f;">⚡ Laser Estéreo</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('buzzer1')">🔊 Buzzer 1 (GPIO 15)</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('buzzer2')">🔊 Buzzer 2 (GPIO 16)</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('senna')">🏎️ Ayrton Senna</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('pacman')">🟡 Pac-Man</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('topgun')">✈️ Top Gun</button>
@@ -1390,7 +1394,7 @@
                 <button class="proto-filter-btn" onclick="filterCircuit('led_green', this)">🟢 LED Verde (GPIO 4)</button>
                 <button class="proto-filter-btn" onclick="filterCircuit('led_red', this)">🔴 LED Vermelho (GPIO 6)</button>
                 <button class="proto-filter-btn" onclick="filterCircuit('pot', this)">🎛️ Potenciômetro (GPIO 1)</button>
-                <button class="proto-filter-btn" onclick="filterCircuit('buzzer', this)">🔊 Buzzer (GPIO 15)</button>
+                <button class="proto-filter-btn" onclick="filterCircuit('buzzer', this)">🔊 Buzzers Duplos (GPIO 15 & 16)</button>
             </div>
 
             <!-- Layout Duplo: Protoboard SVG à Esquerda | Painel de Inspeção & Checklist à Direita -->
@@ -1584,15 +1588,26 @@
                                 <text x="322" y="708" fill="#c084fc" font-size="8.5" font-family="monospace" font-weight="bold">Pot 10k (L44-46)</text>
                             </g>
 
-                            <!-- 6. Buzzer Piezoelétrico (Linhas 50 a 52) -->
+                            <!-- 6. Buzzer Piezoelétrico 1 (Linhas 50 a 52 - GPIO 15 / Melodia) -->
                             <g id="compBuzzer" class="comp-hoverable" data-circuit="buzzer" onclick="inspectComponent('buzzer')">
-                                <!-- Disco Preto do Buzzer -->
-                                <circle cx="125" cy="800" r="22" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                                <!-- Disco Preto do Buzzer 1 -->
+                                <circle cx="125" cy="800" r="22" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
                                 <!-- Furo de Ressonância Central -->
                                 <circle cx="125" cy="800" r="6" fill="#090d16" stroke="#334155" stroke-width="1"/>
                                 <!-- Símbolo Positivo (+) -->
-                                <text x="110" y="792" fill="#f8fafc" font-size="12" font-weight="bold">+</text>
-                                <text x="156" y="803" fill="#f8fafc" font-size="8.5" font-family="monospace" font-weight="bold">Buzzer Piezo (L50-52)</text>
+                                <text x="110" y="792" fill="#38bdf8" font-size="12" font-weight="bold">+</text>
+                                <text x="75" y="836" fill="#f8fafc" font-size="8" font-family="monospace" font-weight="bold">Buzzer 1 (GPIO 15)</text>
+                            </g>
+
+                            <!-- 7. Buzzer Piezoelétrico 2 (Linhas 50 a 52 - GPIO 16 / Harmonia Estéreo) -->
+                            <g id="compBuzzer2" class="comp-hoverable" data-circuit="buzzer" onclick="inspectComponent('buzzer2')">
+                                <!-- Disco Preto do Buzzer 2 -->
+                                <circle cx="305" cy="800" r="22" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                                <!-- Furo de Ressonância Central -->
+                                <circle cx="305" cy="800" r="6" fill="#090d16" stroke="#334155" stroke-width="1"/>
+                                <!-- Símbolo Positivo (+) -->
+                                <text x="290" y="792" fill="#f59e0b" font-size="12" font-weight="bold">+</text>
+                                <text x="255" y="836" fill="#f59e0b" font-size="8" font-family="monospace" font-weight="bold">Buzzer 2 (GPIO 16)</text>
                             </g>
 
                             <!-- ============================================== -->
@@ -1664,14 +1679,24 @@
                                 d="M 265 720 C 180 735, 90 730, 30 720"
                                 fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
 
-                            <!-- Circuito Buzzer: GPIO 15 (ESP32 L7 -> Linha 50) -->
+                            <!-- Circuito Buzzer 1: GPIO 15 (ESP32 L7 -> Linha 50) -->
                             <path class="jumper-wire" data-circuit="buzzer" data-wire="buzzer_sig" onclick="inspectWire('buzzer_sig')"
                                 d="M 175 135 C 60 220, 50 650, 115 780"
                                 fill="none" stroke="#f8fafc" stroke-width="3.5" stroke-linecap="round"/>
 
-                            <!-- Circuito Buzzer: GND (Linha 52 -> Trilho -) -->
+                            <!-- Circuito Buzzer 1: GND (Linha 52 -> Trilho -) -->
                             <path class="jumper-wire" data-circuit="buzzer power" data-wire="buzzer_gnd" onclick="inspectWire('buzzer_gnd')"
                                 d="M 115 810 C 85 815, 60 815, 30 810"
+                                fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+
+                            <!-- Circuito Buzzer 2: GPIO 16 (ESP32 L8 Direita -> Linha 50 f) -->
+                            <path class="jumper-wire" data-circuit="buzzer" data-wire="buzzer2_sig" onclick="inspectWire('buzzer2_sig')"
+                                d="M 265 150 C 370 230, 380 660, 315 780"
+                                fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"/>
+
+                            <!-- Circuito Buzzer 2: GND (Linha 52 j -> Trilho - Direito) -->
+                            <path class="jumper-wire" data-circuit="buzzer power" data-wire="buzzer2_gnd" onclick="inspectWire('buzzer2_gnd')"
+                                d="M 345 810 C 365 815, 385 815, 410 810"
                                 fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
                         </svg>
                     </div>
@@ -1749,7 +1774,13 @@
                             <div class="step-item" onclick="toggleStep(7)">
                                 <input type="checkbox" id="step7" class="step-check" onchange="updateStepProgress()">
                                 <label for="step7" class="step-label">
-                                    <strong>Passo 7:</strong> <strong>Buzzer Piezo (Linhas 50 a 52)</strong>: Positivo (+) na Linha 50 para Linha 7 (GPIO 15) e Negativo (-) na L52 para trilho (-).
+                                    <strong>Passo 7:</strong> <strong>Buzzer 1 (Linhas 50 a 52)</strong>: Positivo (+) no GPIO 15 e Negativo (-) no trilho GND (-).
+                                </label>
+                            </div>
+                            <div class="step-item" onclick="toggleStep(8)">
+                                <input type="checkbox" id="step8" class="step-check" onchange="updateStepProgress()">
+                                <label for="step8" class="step-label">
+                                    <strong>Passo 8:</strong> <strong>Buzzer 2 (Linhas 50 a 52 Direita)</strong>: Positivo (+) no GPIO 16 e Negativo (-) no trilho GND (-) para áudio polifônico estéreo!
                                 </label>
                             </div>
                         </div>
@@ -1805,10 +1836,11 @@
                     </div>
                     <!-- Card Buzzer -->
                     <div style="background: #1e293b; border-radius: 10px; padding: 16px; border-left: 6px solid #f97316;">
-                        <h4 style="font-size: 1.25rem; color: #fb923c; margin-bottom: 10px;">🔔 4. BUZZER PIEZOELÉTRICO</h4>
+                        <h4 style="font-size: 1.25rem; color: #fb923c; margin-bottom: 10px;">🔔 4. BUZZERS DUPLOS (POLIFONIA ESTÉREO)</h4>
                         <div style="font-size: 1.15rem; line-height: 1.8;">
-                            <div>• <strong>Terminal Positivo (+)</strong> ➔ <span class="pin-chip" style="background:#ea580c;">GPIO 15</span> (Linha 7)</div>
-                            <div>• <strong>Terminal Negativo (-)</strong> ➔ <span class="pin-chip" style="background:#0f172a;">Trilho GND (-)</span></div>
+                            <div>• <strong>Buzzer 1 Positivo (+)</strong> ➔ <span class="pin-chip" style="background:#ea580c;">GPIO 15</span> (Melodia Principal)</div>
+                            <div>• <strong>Buzzer 2 Positivo (+)</strong> ➔ <span class="pin-chip" style="background:#f59e0b;">GPIO 16</span> (Harmonia / Estéreo)</div>
+                            <div>• <strong>Terminais Negativos (-)</strong> ➔ <span class="pin-chip" style="background:#0f172a;">Trilho GND (-)</span></div>
                         </div>
                     </div>
                 </div>
@@ -1877,12 +1909,20 @@
                             <td>Ajuste Analógico de Brilho/Sensibilidade</td>
                         </tr>
                         <tr>
-                            <td><strong>Buzzer Piezoelétrico</strong></td>
-                            <td>Linhas 50 a 52</td>
+                            <td><strong>Buzzer 1 (Primário / Melodia)</strong></td>
+                            <td>Linhas 50 a 52 (Esquerda)</td>
                             <td><span class="wire-dot" style="background: #fff; border:1px solid #888;"></span>Branco</td>
                             <td>Positivo (+), Negativo (-)</td>
                             <td><span class="pin-chip">GPIO 15</span> e <span class="pin-chip">GND</span></td>
-                            <td>Trilhas 8-Bit (Senna, Star Wars, Mario)</td>
+                            <td>Melodia Principal 8-Bit (Senna, Star Wars, Mario)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Buzzer 2 (Secundário / Estéreo)</strong></td>
+                            <td>Linhas 50 a 52 (Direita)</td>
+                            <td><span class="wire-dot" style="background: #f59e0b;"></span>Laranja</td>
+                            <td>Positivo (+), Negativo (-)</td>
+                            <td><span class="pin-chip">GPIO 16</span> e <span class="pin-chip">GND</span></td>
+                            <td>Harmonia Polifônica, Acordes Duplos e Efeitos Estéreo</td>
                         </tr>
                         <tr>
                             <td><strong>Linhas Livres de Expansão</strong></td>
@@ -3239,10 +3279,16 @@
                 action: '<div style="margin-top:6px;"><label style="font-size:0.8rem; color:#cbd5e1;">Ajuste do Cursor (0 a 100%): </label><input type="range" min="0" max="100" value="70" id="potSlider" oninput="adjustPotKnob(this.value)" style="vertical-align:middle; width:160px; accent-color:#c084fc;"> <span id="potValueText" style="font-family:monospace; font-weight:bold; color:#c084fc;">70%</span></div>'
             },
             'buzzer': {
-                title: '🔊 Buzzer Piezoelétrico Ativo/Passivo (Linhas 50 a 52)',
+                title: '🔊 Buzzer 1 (Melodia Principal - Linhas 50 a 52)',
                 badge: 'GPIO 15 (LEDC/PWM)',
-                body: 'Transdutor piezoelétrico que gera notas quadradas 8-bit de 100Hz a 4000Hz via biblioteca LEDC do ESP32.<br>• <strong>Linha 50 (+):</strong> Conectado no GPIO 15.<br>• <strong>Linha 52 (-):</strong> Conectado no barramento GND.<br>Toca Star Wars, Super Mario, Ayrton Senna e som de moedas!',
-                action: '<button onclick="testBuzzerSound()" class="proto-filter-btn" style="background:#581c87; color:#f3e8ff; border-color:#c084fc;">🔊 Tocar Beep de Teste (440Hz A4)</button>'
+                body: 'Transdutor piezoelétrico principal que conduz as melodias 8-bit de 100Hz a 4000Hz.<br>• <strong>Linha 50 (+):</strong> Conectado no GPIO 15.<br>• <strong>Linha 52 (-):</strong> Conectado no barramento GND.<br>Toca Star Wars, Super Mario, Ayrton Senna e moedas!',
+                action: '<button onclick="sendEsp32Command(\'buzzer1\')" class="proto-filter-btn" style="background:#581c87; color:#f3e8ff; border-color:#c084fc;">🔊 Testar Buzzer 1 no Robô (GPIO 15)</button>'
+            },
+            'buzzer2': {
+                title: '🔊 Buzzer 2 (Harmonia Estéreo - Linhas 50 a 52 Direita)',
+                badge: 'GPIO 16 (LEDC/PWM)',
+                body: 'Segundo transdutor piezoelétrico adicionado para áudio polifônico real a 2 vozes.<br>• <strong>Linha 50 f (+):</strong> Conectado no GPIO 16.<br>• <strong>Linha 52 j (-):</strong> Conectado no barramento GND.<br>Gera harmonia, contracanto, acordes de duas notas e efeitos estéreo ping-pong!',
+                action: '<button onclick="sendEsp32Command(\'buzzer2\')" class="proto-filter-btn" style="background:#451a03; color:#fef08a; border-color:#eab308;">🔊 Testar Buzzer 2 no Robô (GPIO 16)</button>'
             }
         };
 
@@ -3260,8 +3306,10 @@
             'pot_sig': { title: 'Fio Roxo: Cursor Potenciômetro (Linha 45) ➔ GPIO 1', text: 'Entrada analógica ADC1_CH0 lendo tensão entre 0V e 3.3V (resolução 12-bit, 0 a 4095).' },
             'pot_vcc': { title: 'Jumper Vermelho: Trilho (+) ➔ Terminal 1 Potenciômetro (Linha 44)', text: 'Extremidade alta do resistor de 10kΩ ligada em 3.3V.' },
             'pot_gnd': { title: 'Jumper Preto: Terminal 3 Potenciômetro (Linha 46) ➔ Trilho (-)', text: 'Extremidade baixa do resistor de 10kΩ ligada em GND.' },
-            'buzzer_sig': { title: 'Fio Branco: GPIO 15 ➔ Terminal Positivo Buzzer (Linha 50)', text: 'Sinal de onda quadrada sintetizado por PWM de áudio para gerar tons 8-bit.' },
-            'buzzer_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer (Linha 52) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer.' }
+            'buzzer_sig': { title: 'Fio Branco: GPIO 15 ➔ Terminal Positivo Buzzer 1 (Linha 50)', text: 'Sinal de onda quadrada sintetizado por PWM de áudio para gerar tons 8-bit.' },
+            'buzzer_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer 1 (Linha 52) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer 1.' },
+            'buzzer2_sig': { title: 'Fio Laranja: GPIO 16 ➔ Terminal Positivo Buzzer 2 (Linha 50 f)', text: 'Canal secundário de áudio para harmonia, contracanto e efeitos estéreo.' },
+            'buzzer2_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer 2 (Linha 52 j) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer 2.' }
         };
 
         function inspectComponent(compId) {
@@ -3280,7 +3328,8 @@
                 compId === 'oled' ? 'compOled' :
                 compId === 'led_green' ? 'compLedGreen' :
                 compId === 'led_red' ? 'compLedRed' :
-                compId === 'pot' ? 'compPot' : 'compBuzzer'
+                compId === 'pot' ? 'compPot' :
+                compId === 'buzzer2' ? 'compBuzzer2' : 'compBuzzer'
             );
             if (compEl) compEl.style.filter = 'drop-shadow(0 0 12px #38bdf8)';
         }

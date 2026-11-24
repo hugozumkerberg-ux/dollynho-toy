@@ -117,18 +117,49 @@ void ledsOff() {
 }
 
 // ----------------------------------------------------
-// Controle Direto de Áudio por Hardware LEDC (Buzzer Piezo)
+// Controle de Áudio Estéreo / Polifônico (Dual Buzzer LEDC Hardware)
+// Buzzer 1 = GPIO 15 (Melodia Principal / Canal Esquerdo)
+// Buzzer 2 = GPIO 16 (Harmonia / Baixo / Canal Direito)
 // ----------------------------------------------------
-void buzzerTone(unsigned int freq) {
+void buzzerTone1(unsigned int freq) {
     if (freq > 0) {
-        ledcWriteTone(PIN_BUZZER, freq);
+        ledcWriteTone(PIN_BUZZER_1, freq);
     } else {
-        ledcWrite(PIN_BUZZER, 0);
+        ledcWrite(PIN_BUZZER_1, 0);
     }
 }
 
+void buzzerTone2(unsigned int freq) {
+    if (freq > 0) {
+        ledcWriteTone(PIN_BUZZER_2, freq);
+    } else {
+        ledcWrite(PIN_BUZZER_2, 0);
+    }
+}
+
+// Toca frequências distintas simultaneamente (Polifonia real a 2 vozes!)
+void buzzerToneDual(unsigned int freq1, unsigned int freq2) {
+    buzzerTone1(freq1);
+    buzzerTone2(freq2);
+}
+
+// Toca nos dois buzzers em fase (Modo Volume Duplo Boost)
+void buzzerTone(unsigned int freq) {
+    buzzerTone1(freq);
+    buzzerTone2(freq);
+}
+
+void buzzerNoTone1() {
+    ledcWrite(PIN_BUZZER_1, 0);
+}
+
+void buzzerNoTone2() {
+    ledcWrite(PIN_BUZZER_2, 0);
+}
+
 void buzzerNoTone() {
-    ledcWrite(PIN_BUZZER, 0);
+    buzzerNoTone1();
+    buzzerNoTone2();
 }
 
 // 3 Piscadas Verdes: Wi-Fi Conectado com sucesso
@@ -312,19 +343,58 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
 }
 
 void playLaserSfx() {
+    // Efeito Laser Estéreo: o som se divide entre o Buzzer 1 (agudo) e o Buzzer 2 (grave harmônico)
     for (int f = 1600; f >= 200; f -= 75) {
-        buzzerTone(f);
+        buzzerToneDual(f, f / 2);
         delay(6);
     }
     buzzerNoTone();
     ledsOff();
 }
 
+void playStereoLaserSfx() {
+    // Laser Ping-Pong Estéreo: Dispara no Buzzer 1 e ricocheteia no Buzzer 2
+    for (int f = 1800; f >= 400; f -= 90) {
+        buzzerTone1(f);
+        delay(6);
+    }
+    buzzerNoTone1();
+    for (int f = 1200; f >= 250; f -= 80) {
+        buzzerTone2(f);
+        delay(7);
+    }
+    buzzerNoTone2();
+    ledsOff();
+}
+
+void playDualChordSfx() {
+    // Acorde Polifônico Triunfante a 2 Vozes (Buzzer 1 + Buzzer 2 simultâneos)
+    // Dó4 + Sol4 (Quinta Perfeita)
+    buzzerToneDual(NOTE_C4, NOTE_G4);
+    analogWrite(PIN_LED_VERMELHO, 150);
+    delay(140);
+    // Mi4 + Si4 (Terça Maior harmônica)
+    buzzerToneDual(NOTE_E4, NOTE_B4);
+    analogWrite(PIN_LED_AMARELO, 200);
+    delay(140);
+    // Sol4 + Ré5
+    buzzerToneDual(NOTE_G4, NOTE_D5);
+    analogWrite(PIN_LED_VERDE, 200);
+    delay(140);
+    // Dó5 + Sol5 (Clímax brilhante duplo)
+    buzzerToneDual(NOTE_C5, NOTE_G5);
+    rgbLedWrite(RGB_BUILTIN, 0, 255, 255);
+    delay(350);
+    buzzerNoTone();
+    ledsOff();
+}
+
 void play1UpSfx() {
-    int notes[] = {NOTE_E5, NOTE_G5, NOTE_E6, NOTE_C6, NOTE_D6, NOTE_G6};
-    int durs[]  = {100,     100,     100,     100,     100,     250};
+    int notes1[] = {NOTE_E5, NOTE_G5, NOTE_E6, NOTE_C6, NOTE_D6, NOTE_G6};
+    int notes2[] = {NOTE_C5, NOTE_E5, NOTE_C6, NOTE_G5, NOTE_B5, NOTE_D6}; // Harmonia em terças no Buzzer 2!
+    int durs[]   = {100,     100,     100,     100,     100,     250};
     for (int i = 0; i < 6; i++) {
-        buzzerTone(notes[i]);
+        buzzerToneDual(notes1[i], notes2[i]);
         setLedsColor(0, 255, 0, 200);
         delay(durs[i]);
         buzzerNoTone();
@@ -344,8 +414,8 @@ void notifyMarioCoin() {
     Serial.printf("[Mario] 🪙 Moeda Coletada! Total: %d (+200 PTS)\n", totalCoinsCollected);
     roboEyes.setMood(HAPPY);
 
-    // Primeiro tom agudo (B5) com brilho dourado nos LEDs
-    buzzerTone(NOTE_B5);
+    // Primeiro tom: Si5 (B5) no Buzzer 1 + Sol#5 (GS5) no Buzzer 2
+    buzzerToneDual(NOTE_B5, NOTE_GS5);
     analogWrite(PIN_LED_VERDE, 255);
     rgbLedWrite(RGB_BUILTIN, 255, 215, 0); // Dourado brilhante no ESP32
 
@@ -354,8 +424,8 @@ void notifyMarioCoin() {
         delay(28);
     }
 
-    // Segundo tom (E6) no ápice do pulo com brilho verde
-    buzzerTone(NOTE_E6);
+    // Segundo tom: Mi6 (E6) no Buzzer 1 + Si5 (B5) no Buzzer 2 (Acorde completo brilhante!)
+    buzzerToneDual(NOTE_E6, NOTE_B5);
     analogWrite(PIN_LED_VERDE, 200);
     rgbLedWrite(RGB_BUILTIN, 50, 255, 100);
 
@@ -728,6 +798,26 @@ void executeRobotCommand(String cmd) {
         Serial.println("[Efeito] ⭐ Vida Extra 1-Up Arcade!");
         play1UpSfx();
     }
+    else if (cmd == "dualbeep" || cmd == "chord" || cmd == "acorde") {
+        Serial.println("[Áudio] 🎶 Tocando Acorde Polifônico Dual Buzzer (GPIO 15 + GPIO 16)!");
+        playDualChordSfx();
+    }
+    else if (cmd == "stereo" || cmd == "estereo") {
+        Serial.println("[Áudio] ⚡ Disparo Laser Estéreo (Buzzer 1 ➔ Buzzer 2)!");
+        playStereoLaserSfx();
+    }
+    else if (cmd == "buzzer1") {
+        Serial.println("[Áudio] Testando Buzzer 1 (GPIO 15)...");
+        buzzerTone1(NOTE_A4);
+        delay(280);
+        buzzerNoTone1();
+    }
+    else if (cmd == "buzzer2") {
+        Serial.println("[Áudio] Testando Buzzer 2 (GPIO 16)...");
+        buzzerTone2(NOTE_E5);
+        delay(280);
+        buzzerNoTone2();
+    }
     else {
         askGemini(cmd);
     }
@@ -794,8 +884,9 @@ void setup() {
     // Desliga IMEDIATAMENTE os LEDs da placa e externos
     ledsOff();
 
-    // Inicialização direta do buzzer no GPIO 15 via hardware LEDC
-    ledcAttach(PIN_BUZZER, 2000, 10);
+    // Inicialização direta dos 2 buzzers (GPIO 15 e GPIO 16) via hardware LEDC (Áudio Estéreo/Polifonia)
+    ledcAttach(PIN_BUZZER_1, 2000, 10);
+    ledcAttach(PIN_BUZZER_2, 2000, 10);
     buzzerNoTone();
 
     Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
