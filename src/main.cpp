@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <WiFi.h>
+#include <WiFiMulti.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
+#include <WebServer.h>
 #include <ArduinoJson.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -37,15 +39,24 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 // Inicialização do FluxGarage RoboEyes
 RoboEyes<Adafruit_SSD1306> roboEyes(display);
 
+// Conexão Wi-Fi Multi (Hugo / Apto 1412) e Servidor Web Local
+WiFiMulti wifiMulti;
+WebServer localServer(80);
+
 // LED RGB On-board do ESP32-S3 (GPIO 48 no DevKitC-1)
 #ifndef RGB_BUILTIN
 #define RGB_BUILTIN 48
 #endif
 
-// Estados de Exibição
+// Estados de Exibição e Humor
 bool showingText = false;
 unsigned long textStartTime = 0;
 unsigned long textDuration = 6000;
+String currentMoodStr = "DEFAULT";
+
+// Declarações antecipadas de funções
+void executeRobotCommand(String cmd);
+void checkRemoteCloudApi();
 
 // Variáveis de Cotação da B3 (BBAS3)
 float bbas3Price = 28.45;
@@ -517,18 +528,157 @@ void askGemini(String userQuery) {
 }
 
 // ----------------------------------------------------
-// Pulsação das Lâmpadas de LED (Somente durante música)
+// Despachante Unificado de Comandos do Robô
+// Executa comandos vindos do Web Serial USB, Servidor Web Local e Nuvem Hostinger
 // ----------------------------------------------------
-void updatePulsingLeds() {
-    // LEDs desligados por padrão fora das músicas
-    ledsOff();
+void executeRobotCommand(String cmd) {
+    cmd.trim();
+    if (cmd.length() == 0) return;
+
+    Serial.println("[Dollynho] Processando comando: " + cmd);
+
+    if (cmd.startsWith("time:")) {
+        String t = cmd.substring(5);
+        t.trim();
+        if (t.length() >= 5) {
+            strncpy(manualTimeStr, t.c_str(), sizeof(manualTimeStr) - 1);
+            hasManualTime = true;
+            Serial.printf("[Relógio] Hora atualizada: %s\n", manualTimeStr);
+        }
+    }
+    else if (cmd == "1" || cmd == "happy") { currentMoodStr = "HAPPY"; roboEyes.setMood(HAPPY); play8BitCoin(); }
+    else if (cmd == "2" || cmd == "angry") { currentMoodStr = "ANGRY"; roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL); }
+    else if (cmd == "3" || cmd == "tired") { currentMoodStr = "TIRED"; roboEyes.setMood(TIRED); buzzerTone(NOTE_FS4); delay(250); buzzerNoTone(); ledsOff(); }
+    else if (cmd == "4" || cmd == "default") { currentMoodStr = "DEFAULT"; roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); ledsOff(); }
+    else if (cmd == "laugh") { roboEyes.anim_laugh(); play8BitCoin(); }
+    else if (cmd == "confused") { roboEyes.anim_confused(); buzzerTone(NOTE_A5); delay(80); buzzerNoTone(); ledsOff(); }
+    else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
+    else if (cmd == "coin" || cmd == "moeda") { notifyMarioCoin(); }
+    
+    // MÚSICAS COMPLETAS COM ANIMAÇÃO VISUAL
+    else if (cmd == "starwars" || cmd == "sw" || cmd == "starwars_main") {
+        Serial.println("[Música] Tocando Star Wars: Tema Principal + Logo no OLED!");
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        playSong(SONG_STAR_WARS_MAIN, LEN_STAR_WARS_MAIN, THEME_STAR_WARS_MAIN);
+    }
+    else if (cmd == "imperial" || cmd == "vader") {
+        Serial.println("[Música] Tocando Star Wars: Marcha Imperial + Logo no OLED!");
+        currentMoodStr = "ANGRY";
+        roboEyes.setMood(ANGRY);
+        playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL);
+    }
+    else if (cmd == "mario") {
+        Serial.println("[Música] Tocando Super Mario Bros + Animação no OLED!");
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        playSong(SONG_MARIO_FULL, LEN_MARIO_FULL, THEME_MARIO);
+    }
+    else if (cmd == "tetris") {
+        Serial.println("[Música] Tocando Tetris Korobeiniki Completo!");
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        playSong(SONG_TETRIS_FULL, LEN_TETRIS_FULL, THEME_NONE);
+    }
+    else if (cmd == "senna" || cmd == "vitoria" || cmd == "f1") {
+        Serial.println("[Música] 🏎️ Ayrton Senna: Tema da Vitória + Logo Senna no OLED!");
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        roboEyes.anim_laugh();
+        playSong(SONG_SENNA_VITORIA, LEN_SENNA_VITORIA, THEME_SENNA);
+    }
+    else if (cmd == "pacman" || cmd == "pac") {
+        Serial.println("[Música] 🟡 Pac-Man Arcade 1980 + Labirinto no OLED!");
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        playSong(SONG_PACMAN_FULL, LEN_PACMAN_FULL, THEME_PACMAN);
+    }
+    else if (cmd == "topgun" || cmd == "dangerzone" || cmd == "f14") {
+        Serial.println("[Música] ✈️ Top Gun: Danger Zone + Caça F-14 Tomcat no OLED!");
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        playSong(SONG_TOP_GUN, LEN_TOP_GUN, THEME_TOP_GUN);
+    }
+    else if (cmd == "space" || cmd == "invaders" || cmd == "arcade" || cmd == "escape") {
+        Serial.println("[Música] 👾 Space Invaders Arcade Escape + Batalha Espacial no OLED!");
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        playSong(SONG_ARCADE_SPACE, LEN_ARCADE_SPACE, THEME_ARCADE_SPACE);
+    }
+    else if (cmd == "takeonme" || cmd == "80s" || cmd == "anos80" || cmd == "aha") {
+        Serial.println("[Música] 📼 Anos 80: Take On Me (A-ha) + Synthwave Grid no OLED!");
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        roboEyes.anim_laugh();
+        playSong(SONG_TAKE_ON_ME, LEN_TAKE_ON_ME, THEME_80S_SYNTH);
+    }
+    else if (cmd == "laser") {
+        Serial.println("[Efeito] ⚡ Disparo Laser 8-Bit!");
+        playLaserSfx();
+    }
+    else if (cmd == "1up") {
+        Serial.println("[Efeito] ⭐ Vida Extra 1-Up Arcade!");
+        play1UpSfx();
+    }
+    else {
+        askGemini(cmd);
+    }
+}
+
+// ----------------------------------------------------
+// Polling da Fila Remota na Nuvem Hostinger
+// Consulta a API e executa comandos pendentes enviados via Web
+// ----------------------------------------------------
+unsigned long lastCloudPoll = 0;
+const unsigned long CLOUD_POLL_INTERVAL = 1800; // a cada 1.8 segundos
+
+void checkRemoteCloudApi() {
+    if (WiFi.status() != WL_CONNECTED) return;
+    if (showingText) return;
+
+    unsigned long now = millis();
+    if (now - lastCloudPoll < CLOUD_POLL_INTERVAL) return;
+    lastCloudPoll = now;
+
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient https;
+    https.setTimeout(2200);
+
+    String url = String(CLOUD_API_URL) + "?action=poll&auto_ack=1&ip=" + WiFi.localIP().toString() +
+                 "&rssi=" + String(WiFi.RSSI()) + "&mood=" + currentMoodStr;
+
+    if (https.begin(client, url)) {
+        int httpCode = https.GET();
+        if (httpCode == HTTP_CODE_OK) {
+            String payload = https.getString();
+            JsonDocument doc;
+            DeserializationError err = deserializeJson(doc, payload);
+            if (!err) {
+                const char* cmd = doc["cmd"];
+                if (cmd && strlen(cmd) > 0) {
+                    String cmdStr = String(cmd);
+                    Serial.println("[Nuvem Hostinger] 📡 Comando remoto recebido: " + cmdStr);
+
+                    // Pisca LED azul indicando comando remoto recebido
+                    rgbLedWrite(RGB_BUILTIN, 0, 100, 255);
+                    delay(70);
+                    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
+
+                    // Executa o comando no robô
+                    executeRobotCommand(cmdStr);
+                }
+            }
+        }
+        https.end();
+    }
 }
 
 void setup() {
     Serial.begin(115200);
     delay(400);
     Serial.println("\n==============================================");
-    Serial.println("  🤖 Dollynho Toy: Músicas 8-Bits + Star Wars ");
+    Serial.println("  🤖 Dollynho Toy: Músicas 8-Bits + Nuvem Hostinger ");
     Serial.println("==============================================");
 
     pinMode(PIN_LED_VERDE, OUTPUT);
@@ -573,22 +723,61 @@ void setup() {
     Serial.println("[Wi-Fi AP] Ponto de Acesso criado: 'Dollynho-Toy' (Senha: 12345678)");
     Serial.println("[Wi-Fi AP] IP direto do Robô: " + WiFi.softAPIP().toString());
 
-    // Conexão Wi-Fi Local
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
+    // Wi-Fi Multi: Conecta na rede disponível ("Hugo" ou "Apto 1412")
+    wifiMulti.addAP(WIFI_SSID_1, WIFI_PASS_1);
+    wifiMulti.addAP(WIFI_SSID_2, WIFI_PASS_2);
+
+    Serial.println("[Wi-Fi Multi] Conectando a rede configurada...");
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 15) {
-        delay(300);
+    while (wifiMulti.run() != WL_CONNECTED && attempts < 15) {
+        delay(350);
         attempts++;
         roboEyes.update();
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("[Wi-Fi Local] Conectado! IP: " + WiFi.localIP().toString());
+        Serial.println("[Wi-Fi Local] Conectado à rede '" + WiFi.SSID() + "'! IP: " + WiFi.localIP().toString());
+        currentMoodStr = "HAPPY";
         roboEyes.setMood(HAPPY);
+        blinkWifiConnected();
     } else {
         Serial.println("[Wi-Fi Local] Modo Offline (Use o Wi-Fi direto 'Dollynho-Toy')");
+        currentMoodStr = "DEFAULT";
         roboEyes.setMood(DEFAULT);
     }
+
+    // Configura Servidor Web Local (Porta 80)
+    localServer.on("/", HTTP_GET, []() {
+        String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Dollynho Toy</title></head>"
+                      "<body style='font-family:sans-serif;text-align:center;padding:30px;background:#0a0f1d;color:#fff;'>"
+                      "<h1>🤖 Dollynho Toy Online!</h1>"
+                      "<p>IP Local: " + WiFi.localIP().toString() + "</p>"
+                      "<p>IP Direto (AP): " + WiFi.softAPIP().toString() + "</p>"
+                      "<p>Painel Web na Nuvem: <a style='color:#38bdf8;' href='https://bazardasnovidades.com/robo/'>bazardasnovidades.com/robo/</a></p>"
+                      "</body></html>";
+        localServer.send(200, "text/html", html);
+    });
+
+    localServer.on("/cmd", HTTP_GET, []() {
+        if (localServer.hasArg("c")) {
+            String c = localServer.arg("c");
+            executeRobotCommand(c);
+            localServer.send(200, "application/json", "{\"success\":true,\"cmd\":\"" + c + "\"}");
+        } else {
+            localServer.send(400, "application/json", "{\"success\":false,\"error\":\"Parametro c ausente\"}");
+        }
+    });
+
+    localServer.on("/status", HTTP_GET, []() {
+        String json = "{\"online\":true,\"ip\":\"" + WiFi.localIP().toString() + 
+                      "\",\"rssi\":" + String(WiFi.RSSI()) + 
+                      ",\"ssid\":\"" + WiFi.SSID() + 
+                      "\",\"mood\":\"" + currentMoodStr + "\"}";
+        localServer.send(200, "application/json", json);
+    });
+
+    localServer.begin();
+    Serial.println("[HTTP Local] Servidor Web ativo na porta 80");
 
     // Hook de overlay para desenhar a barra de status no mesmo buffer dos olhos (sem flicker)
     roboEyes.onDrawOverlay = [](Adafruit_SSD1306* disp) {
@@ -611,6 +800,18 @@ void setup() {
 void loop() {
     unsigned long now = millis();
 
+    // Atende requisições do servidor web local
+    localServer.handleClient();
+
+    // Mantém a conexão Wi-Fi ativa via WiFiMulti
+    static unsigned long lastWifiCheck = 0;
+    if (now - lastWifiCheck > 3000) {
+        lastWifiCheck = now;
+        if (WiFi.status() != WL_CONNECTED) {
+            wifiMulti.run();
+        }
+    }
+
     // LEDs ficam desligados quando nenhuma música estiver tocando
     if (showingText) {
         if (now - textStartTime > textDuration) {
@@ -626,88 +827,13 @@ void loop() {
         updateStockBBAS3();
     }
 
-    // Leitura do Monitor Serial
+    // Polling Remoto na Nuvem (Hostinger API) a cada 1.8 segundos quando conectado
+    checkRemoteCloudApi();
+
+    // Leitura do Monitor Serial / Web Serial USB
     if (Serial.available()) {
         String cmd = Serial.readStringUntil('\n');
-        cmd.trim();
-
-        if (cmd.startsWith("time:")) {
-            String t = cmd.substring(5);
-            t.trim();
-            if (t.length() >= 5) {
-                strncpy(manualTimeStr, t.c_str(), sizeof(manualTimeStr) - 1);
-                hasManualTime = true;
-                Serial.printf("[Relógio] Hora atualizada pelo site/computador: %s\n", manualTimeStr);
-            }
-        }
-        else if (cmd == "1" || cmd == "happy") { roboEyes.setMood(HAPPY); play8BitCoin(); }
-        else if (cmd == "2" || cmd == "angry") { roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL); }
-        else if (cmd == "3" || cmd == "tired") { roboEyes.setMood(TIRED); buzzerTone(NOTE_FS4); delay(250); buzzerNoTone(); ledsOff(); }
-        else if (cmd == "4" || cmd == "default") { roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); ledsOff(); }
-        else if (cmd == "laugh") { roboEyes.anim_laugh(); play8BitCoin(); }
-        else if (cmd == "confused") { roboEyes.anim_confused(); buzzerTone(NOTE_A5); delay(80); buzzerNoTone(); ledsOff(); }
-        else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
-        else if (cmd == "coin" || cmd == "moeda") { notifyMarioCoin(); }
-        
-        // MÚSICAS COMPLETAS COM ANIMAÇÃO VISUAL
-        else if (cmd == "starwars" || cmd == "sw") {
-            Serial.println("[Música] Tocando Star Wars: Tema Principal + Logo no OLED!");
-            roboEyes.setMood(HAPPY);
-            playSong(SONG_STAR_WARS_MAIN, LEN_STAR_WARS_MAIN, THEME_STAR_WARS_MAIN);
-        }
-        else if (cmd == "imperial" || cmd == "vader") {
-            Serial.println("[Música] Tocando Star Wars: Marcha Imperial + Logo no OLED!");
-            roboEyes.setMood(ANGRY);
-            playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL);
-        }
-        else if (cmd == "mario") {
-            Serial.println("[Música] Tocando Super Mario Bros + Animação no OLED!");
-            roboEyes.setMood(HAPPY);
-            playSong(SONG_MARIO_FULL, LEN_MARIO_FULL, THEME_MARIO);
-        }
-        else if (cmd == "tetris") {
-            Serial.println("[Música] Tocando Tetris Korobeiniki Completo!");
-            roboEyes.setMood(DEFAULT);
-            playSong(SONG_TETRIS_FULL, LEN_TETRIS_FULL, THEME_NONE);
-        }
-        else if (cmd == "senna" || cmd == "vitoria" || cmd == "f1") {
-            Serial.println("[Música] 🏎️ Ayrton Senna: Tema da Vitória + Logo Senna no OLED!");
-            roboEyes.setMood(HAPPY);
-            roboEyes.anim_laugh();
-            playSong(SONG_SENNA_VITORIA, LEN_SENNA_VITORIA, THEME_SENNA);
-        }
-        else if (cmd == "pacman" || cmd == "pac") {
-            Serial.println("[Música] 🟡 Pac-Man Arcade 1980 + Labirinto no OLED!");
-            roboEyes.setMood(HAPPY);
-            playSong(SONG_PACMAN_FULL, LEN_PACMAN_FULL, THEME_PACMAN);
-        }
-        else if (cmd == "topgun" || cmd == "dangerzone" || cmd == "f14") {
-            Serial.println("[Música] ✈️ Top Gun: Danger Zone + Caça F-14 Tomcat no OLED!");
-            roboEyes.setMood(DEFAULT);
-            playSong(SONG_TOP_GUN, LEN_TOP_GUN, THEME_TOP_GUN);
-        }
-        else if (cmd == "space" || cmd == "invaders" || cmd == "arcade" || cmd == "escape") {
-            Serial.println("[Música] 👾 Space Invaders Arcade Escape + Batalha Espacial no OLED!");
-            roboEyes.setMood(DEFAULT);
-            playSong(SONG_ARCADE_SPACE, LEN_ARCADE_SPACE, THEME_ARCADE_SPACE);
-        }
-        else if (cmd == "takeonme" || cmd == "80s" || cmd == "anos80" || cmd == "aha") {
-            Serial.println("[Música] 📼 Anos 80: Take On Me (A-ha) + Synthwave Grid no OLED!");
-            roboEyes.setMood(HAPPY);
-            roboEyes.anim_laugh();
-            playSong(SONG_TAKE_ON_ME, LEN_TAKE_ON_ME, THEME_80S_SYNTH);
-        }
-        else if (cmd == "laser") {
-            Serial.println("[Efeito] ⚡ Disparo Laser 8-Bit!");
-            playLaserSfx();
-        }
-        else if (cmd == "1up") {
-            Serial.println("[Efeito] ⭐ Vida Extra 1-Up Arcade!");
-            play1UpSfx();
-        }
-        else {
-            askGemini(cmd);
-        }
+        executeRobotCommand(cmd);
     }
 
     delay(5);

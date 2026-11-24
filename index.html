@@ -3319,20 +3319,7 @@
         async function sendEsp32Command(cmd) {
             if (!cmd) return;
 
-            // Se ainda não estiver conectado via Web Serial
-            if (!isWebSerialConnected || !webSerialPort || !webSerialPort.writable) {
-                if ('serial' in navigator) {
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[AVISO] Conectando USB para enviar "${cmd}"...`, 'system');
-                    try {
-                        await connectWebSerial(cmd);
-                        return;
-                    } catch (e) {
-                        appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[AVISO] Selecione a porta COM do ESP32 para enviar comandos.`, 'error');
-                    }
-                }
-            }
-
-            // 1. Prioridade: Se Web Serial estiver conectado diretamente no navegador
+            // 1. Prioridade: Se Web Serial estiver conectado diretamente no navegador via USB
             if (isWebSerialConnected && webSerialPort && webSerialPort.writable) {
                 try {
                     const encoder = new TextEncoder();
@@ -3346,25 +3333,38 @@
                     appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ENVIADO USB] ➔ ${cmd}`, 'sent');
                     return;
                 } catch (err) {
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO USB] ${err.message}`, 'error');
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO USB] ${err.message}. Alternando para Nuvem...`, 'error');
                 }
             }
 
-            // 2. Fallback: Se estiver rodando via servidor Node.js local
-            fetch('/api/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ cmd: cmd })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success) {
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO] Falha ao enviar: ${data.error || 'Desconhecido'}`, 'error');
+            // 2. Envio Remoto via Nuvem Hostinger (Wi-Fi)
+            sendViaCloudApi(cmd);
+        }
+
+        async function sendViaCloudApi(cmd) {
+            try {
+                const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                // No domínio da Hostinger ou remoto, utiliza api.php
+                const apiUrl = isLocalHost ? 'https://bazardasnovidades.com/robo/api.php' : 'api.php';
+                
+                const resp = await fetch(`${apiUrl}?action=send_cmd&cmd=${encodeURIComponent(cmd)}`);
+                const data = await resp.json();
+                if (data.success) {
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[NUVEM WI-FI] ➔ ${cmd} (Enviado ao Robô!)`, 'sent');
+                } else {
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO NUVEM] ${data.error || 'Falha ao enviar'}`, 'error');
                 }
-            })
-            .catch(err => {
-                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[AVISO] Placa não conectada. Conecte o cabo USB e clique no botão azul "Conectar USB"!`, 'error');
-            });
+            } catch (err) {
+                // Fallback para backend Node local se existir
+                fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cmd: cmd })
+                }).catch(() => {
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[AVISO] Não foi possível contatar o robô via Nuvem ou USB.`, 'error');
+                });
+            }
+        }
         }
 
         function executeTerminalInput() {
@@ -3418,13 +3418,58 @@
             };
         }
 
-        function checkEsp32Status() {
-            if (isWebSerialConnected) return; // Não sobrescreve se usuário estiver com Web Serial ativo
+        async function checkEsp32Status() {
+            if (isWebSerialConnected) return; // Não sobrescreve se usuário estiver com Web Serial USB ativo
+
+            const esp32Badge = document.getElementById('esp32Badge');
+            const terminalBadge = document.getElementById('terminalStatusBadge');
+            const banner = document.getElementById('webSerialBanner');
+            const dot = document.getElementById('serialDot');
+            const text = document.getElementById('serialStatusText');
+            const bannerBtn = document.getElementById('bannerConnectBtn');
+
+            const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const cloudApiUrl = isLocalHost ? 'https://bazardasnovidades.com/robo/api.php' : 'api.php';
+
+            try {
+                const resp = await fetch(`${cloudApiUrl}?action=status`);
+                const data = await resp.json();
+                if (data.online) {
+                    if (esp32Badge) {
+                        esp32Badge.className = 'badge online';
+                        esp32Badge.innerText = `● ESP32 Nuvem: Online (${data.ip || 'Wi-Fi'})`;
+                    }
+                    if (terminalBadge) {
+                        terminalBadge.style.borderColor = '#22c55e';
+                        terminalBadge.style.color = '#86efac';
+                        terminalBadge.style.background = '#064e3b';
+                        terminalBadge.innerText = `● Nuvem Wi-Fi (${data.ip || 'Online'} | RSSI: ${data.rssi}dBm)`;
+                    }
+                    if (banner) {
+                        banner.style.borderColor = '#22c55e';
+                        banner.style.borderLeftColor = '#22c55e';
+                        banner.style.background = 'linear-gradient(90deg, #064e3b, #0f172a)';
+                    }
+                    if (dot) {
+                        dot.style.background = '#22c55e';
+                        dot.style.boxShadow = '0 0 12px #22c55e';
+                    }
+                    if (text) {
+                        text.innerHTML = `<strong style="color: #4ade80;">📡 Robô Conectado via Wi-Fi:</strong> IP: <code>${data.ip || 'Ativo'}</code> | Sinal: ${data.rssi} dBm | Humor: ${data.mood}. Todos os comandos são enviados sem fio pela Nuvem!`;
+                    }
+                    if (bannerBtn) {
+                        bannerBtn.innerText = '🔌 Conectar USB (Opcional)';
+                    }
+                    return;
+                }
+            } catch (e) {
+                // Nuvem inacessível no momento
+            }
+
+            // Fallback: tenta servidor local Node.js se estiver rodando localmente
             fetch('/api/status')
                 .then(r => r.json())
                 .then(data => {
-                    const esp32Badge = document.getElementById('esp32Badge');
-                    const terminalBadge = document.getElementById('terminalStatusBadge');
                     if (data.connected) {
                         if (esp32Badge) {
                             esp32Badge.className = 'badge online';
@@ -3437,33 +3482,46 @@
                             terminalBadge.innerText = `● Conectado (${data.port || 'COM8'} @ ${data.baudRate})`;
                         }
                     } else {
-                        if (esp32Badge) {
-                            esp32Badge.className = 'badge';
-                            esp32Badge.style.background = '#3f1515';
-                            esp32Badge.style.borderColor = '#ef4444';
-                            esp32Badge.style.color = '#fca5a5';
-                            esp32Badge.innerText = `● ESP32: Desconectado`;
-                        }
-                        if (terminalBadge) {
-                            terminalBadge.style.borderColor = '#ef4444';
-                            terminalBadge.style.color = '#fca5a5';
-                            terminalBadge.style.background = '#450a0a';
-                            terminalBadge.innerText = `● Desconectado (Clique Conectar USB)`;
-                        }
+                        setDisconnectedUI();
                     }
                 })
                 .catch(() => {
-                    // Servidor local não disponível (típico quando acessado de hospedagem externa)
-                    const esp32Badge = document.getElementById('esp32Badge');
-                    const terminalBadge = document.getElementById('terminalStatusBadge');
-                    if (esp32Badge && !isWebSerialConnected) {
-                        esp32Badge.className = 'badge';
-                        esp32Badge.style.background = '#1e293b';
-                        esp32Badge.style.borderColor = '#475569';
-                        esp32Badge.style.color = '#94a3b8';
-                        esp32Badge.innerText = '● Conectar USB Direto';
-                    }
+                    setDisconnectedUI();
                 });
+
+            function setDisconnectedUI() {
+                if (esp32Badge) {
+                    esp32Badge.className = 'badge';
+                    esp32Badge.style.background = '#3f1515';
+                    esp32Badge.style.borderColor = '#ef4444';
+                    esp32Badge.style.color = '#fca5a5';
+                    esp32Badge.innerText = `● ESP32: Desconectado`;
+                }
+                if (terminalBadge) {
+                    terminalBadge.style.borderColor = '#ef4444';
+                    terminalBadge.style.color = '#fca5a5';
+                    terminalBadge.style.background = '#450a0a';
+                    terminalBadge.innerText = `● Desconectado (Clique Conectar USB ou Conecte Wi-Fi)`;
+                }
+                if (banner) {
+                    banner.style.borderColor = '#ef4444';
+                    banner.style.borderLeftColor = '#ef4444';
+                    banner.style.background = 'linear-gradient(90deg, #1e293b, #0f172a)';
+                }
+                if (dot) {
+                    dot.style.background = '#ef4444';
+                    dot.style.boxShadow = '0 0 12px #ef4444';
+                }
+                if (text) {
+                    text.innerHTML = '<strong style="color: #f87171;">Robô Desconectado:</strong> Para controlar o robô físico, conecte o cabo USB ou certifique-se de que ele esteja conectado à rede Wi-Fi configurada.';
+                }
+                if (bannerBtn) {
+                    bannerBtn.innerText = '🔌 Conectar USB no Navegador';
+                    bannerBtn.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
+                    bannerBtn.style.borderColor = '#38bdf8';
+                    bannerBtn.onclick = connectWebSerial;
+                }
+            }
         }
 
         // Listener para desplugue físico de cabo USB
