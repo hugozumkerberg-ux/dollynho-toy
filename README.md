@@ -12,14 +12,18 @@ O **Dollynho Toy** é um robô assistente de mesa interativo baseado no microcon
   - Animação a 50 FPS de olhinhos no estilo *Cozmo / WALL-E*.
   - Piscamento natural automático (`autoblinker`) e olhar curioso em direções aleatórias (`idleMode`).
   - Estados emocionais: **Feliz (`HAPPY`)**, **Bravo (`ANGRY`)**, **Sonolento/Preocupado (`TIRED`)**, **Normal (`DEFAULT`)**, **Gargalhada (`anim_laugh`)**, **Dúvida/Curiosidade (`anim_confused`)** e suor na testa (`setSweat`).
-- **💡 Sistema Inteligente de LEDs (Externos + On-Board RGB do ESP32):**
-  - **LED RGB On-Board (GPIO 48) ativado:**
+- **💡 Sistema Inteligente de LEDs Pulsantes Conforme o Sentimento:**
+  - **Pulsação Orgânica Contínua nos LEDs Externos e On-Board RGB (GPIO 48):**
+    - 💚 **Feliz (`HAPPY`):** Pulsação respiratória alegre e suave em Verde Esmeralda (~1.3s).
+    - 🔴 **Bravo (`ANGRY`):** Pulsação rápida, tensa e agressiva em Vermelho Vivo (~0.5s).
+    - 🟠 **Cansado / Triste (`TIRED` / `SAD`):** Respiração lenta, suave e fading em Âmbar/Vermelho fraco (~3.5s).
+    - 🔵 **Normal / Foco (`DEFAULT`):** Pulsação zen rítmica e calma em Ciano (~2.3s).
+    - 💖 **Amor (`LOVE` no Dashboard):** Batimento duplo cardíaco (*thump-thump*) em Rosa Vibrante (~1.1s).
+  - **LED RGB On-Board (GPIO 48) - Alertas do Sistema:**
     - 💚 **3 piscadas verdes:** Wi-Fi conectado com sucesso!
     - 💙 **1 piscada azul:** Resposta recebida da API Gemini IA (OK)!
-  - **Bochechas de Expressão:**
-    - LED Verde (GPIO 4): Humor Feliz e BBAS3 em alta na B3.
-    - LED Vermelho (GPIO 6): Humor Triste/Bravo e BBAS3 em queda.
-    - Controle de intensidade analógico em tempo real via potenciômetro.
+    - 🪙 **Brilho Dourado:** Disparado ao coletar moedas do Mario (+200 PTS)!
+  - **Ajuste Físico:** Controle de teto de brilho analógico em tempo real via potenciômetro (GPIO 1).
 - **📈 Monitor da Bolsa B3 (BBAS3 - Banco do Brasil):**
   - Consulta automática via Wi-Fi a cada 5 minutos.
   - Se a ação subir: **LED Verde pisca** + comemoração 8-bit + olhos felizes.

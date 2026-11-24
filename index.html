@@ -152,38 +152,75 @@
             transition: all 0.25s ease;
         }
 
-        .led-green-glow {
+        /* Pulsação das Lâmpadas Conforme o Sentimento */
+        .led-pulse-happy, .led-green-glow {
             background: #22c55e !important;
             border-color: #86efac !important;
             box-shadow: 0 0 25px #22c55e, 0 0 50px rgba(34, 197, 94, 0.6);
-            animation: pulse-green 1.5s infinite ease-in-out;
+            animation: pulse-happy 1.3s infinite ease-in-out;
+        }
+        @keyframes pulse-happy {
+            0%, 100% { opacity: 0.35; transform: scale(0.92); box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+            50% { opacity: 1; transform: scale(1.18); box-shadow: 0 0 30px #22c55e, 0 0 60px rgba(34, 197, 94, 0.85); }
         }
 
-        .led-red-glow {
+        .led-pulse-angry, .led-red-glow {
             background: #ef4444 !important;
             border-color: #fca5a5 !important;
             box-shadow: 0 0 25px #ef4444, 0 0 50px rgba(239, 68, 68, 0.6);
-            animation: pulse-red 1s infinite ease-in-out;
+            animation: pulse-angry 0.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes pulse-angry {
+            0%, 100% { opacity: 0.25; transform: scale(0.95); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+            50% { opacity: 1; transform: scale(1.22); box-shadow: 0 0 35px #ef4444, 0 0 65px rgba(239, 68, 68, 0.95); }
         }
 
-        .led-yellow-glow {
+        .led-pulse-tired {
+            background: #ea580c !important;
+            border-color: #fdba74 !important;
+            box-shadow: 0 0 18px rgba(234, 88, 12, 0.4);
+            animation: pulse-tired 3.5s infinite ease-in-out;
+        }
+        @keyframes pulse-tired {
+            0%, 100% { opacity: 0.15; transform: scale(0.9); box-shadow: 0 0 5px rgba(234, 88, 12, 0.2); }
+            50% { opacity: 0.75; transform: scale(1.06); box-shadow: 0 0 24px rgba(234, 88, 12, 0.7); }
+        }
+
+        .led-pulse-surprised, .led-yellow-glow {
             background: #eab308 !important;
             border-color: #fef08a !important;
             box-shadow: 0 0 25px #eab308, 0 0 50px rgba(234, 179, 8, 0.6);
-            animation: pulse-yellow 0.8s infinite ease-in-out;
+            animation: pulse-surprised 0.7s infinite alternate ease-in-out;
+        }
+        @keyframes pulse-surprised {
+            0% { opacity: 0.3; transform: scale(0.92); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1.24); box-shadow: 0 0 30px #eab308, 0 0 55px rgba(234, 179, 8, 0.85); }
         }
 
-        @keyframes pulse-green {
-            0%, 100% { opacity: 0.4; transform: scale(0.95); }
-            50% { opacity: 1; transform: scale(1.15); }
+        .led-pulse-love {
+            background: #ec4899 !important;
+            border-color: #fbcfe8 !important;
+            box-shadow: 0 0 25px #ec4899;
+            animation: pulse-love 1.1s infinite;
         }
-        @keyframes pulse-red {
-            0%, 100% { opacity: 0.35; transform: scale(0.95); }
-            50% { opacity: 1; transform: scale(1.15); }
+        @keyframes pulse-love {
+            0%, 100% { transform: scale(0.92); opacity: 0.4; }
+            15% { transform: scale(1.22); opacity: 1; box-shadow: 0 0 35px #ec4899; }
+            30% { transform: scale(1.0); opacity: 0.6; }
+            45% { transform: scale(1.28); opacity: 1; box-shadow: 0 0 45px #ec4899, 0 0 70px rgba(236, 72, 153, 0.85); }
+            60% { transform: scale(0.92); opacity: 0.4; }
         }
-        @keyframes pulse-yellow {
-            0%, 100% { opacity: 0.4; transform: scale(0.95); }
-            50% { opacity: 1; transform: scale(1.2); }
+
+        .led-pulse-default {
+            background: #0ea5e9 !important;
+            border-color: #7dd3fc !important;
+            box-shadow: 0 0 25px #0ea5e9;
+            animation: pulse-default 2.3s infinite ease-in-out;
+        }
+        @keyframes pulse-default {
+            0%, 100% { opacity: 0.25; transform: scale(0.93); box-shadow: 0 0 10px rgba(14, 165, 233, 0.3); }
+            50% { opacity: 0.95; transform: scale(1.15); box-shadow: 0 0 30px #0ea5e9, 0 0 55px rgba(14, 165, 233, 0.75); }
         }
 
         .oled-viewport {
@@ -540,11 +577,14 @@
 
             <!-- Chassi Físico Virtual -->
             <div class="chassis-box">
-                <div class="side-led led-green-glow" id="leftLed"></div>
+                <div class="side-led led-pulse-happy" id="leftLed"></div>
                 <div class="oled-viewport">
                     <canvas id="oledCanvas" width="256" height="128"></canvas>
                 </div>
-                <div class="side-led led-green-glow" id="rightLed"></div>
+                <div class="side-led led-pulse-happy" id="rightLed"></div>
+            </div>
+            <div id="ledPulseStatus" style="font-size: 0.78rem; text-align: center; color: var(--accent-green); margin: 6px 0 10px 0; font-family: monospace; font-weight: bold;">
+                💚 LEDs: Pulsação Respiratória Alegre (Verde ~1.3s)
             </div>
 
             <!-- Seletor de Rostos -->
@@ -913,15 +953,53 @@
             };
             currentEmotionLabel.innerText = mapBtn[face] || face;
 
-            // LEDs de acordo com o humor
-            if (face === 'happy' || face === 'love') {
-                setLedColor('green');
-            } else if (face === 'sad' || face === 'angry') {
-                setLedColor('red');
+            // Pulsação das lâmpadas conforme o sentimento
+            leftLed.className = 'side-led';
+            rightLed.className = 'side-led';
+            const pulseLabel = document.getElementById('ledPulseStatus');
+
+            if (face === 'happy') {
+                leftLed.classList.add('led-pulse-happy');
+                rightLed.classList.add('led-pulse-happy');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "💚 LEDs: Pulsação Respiratória Alegre (Verde ~1.3s)";
+                    pulseLabel.style.color = "var(--accent-green)";
+                }
+            } else if (face === 'angry') {
+                leftLed.classList.add('led-pulse-angry');
+                rightLed.classList.add('led-pulse-angry');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "🔴 LEDs: Pulsação Rápida e Intensa (Vermelho ~0.5s)";
+                    pulseLabel.style.color = "var(--accent-red)";
+                }
+            } else if (face === 'sad' || face === 'sleepy') {
+                leftLed.classList.add('led-pulse-tired');
+                rightLed.classList.add('led-pulse-tired');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "🟠 LEDs: Respiração Lenta Suave (Âmbar Fading ~3.5s)";
+                    pulseLabel.style.color = "#fb923c";
+                }
             } else if (face === 'surprised') {
-                setLedColor('yellow');
+                leftLed.classList.add('led-pulse-surprised');
+                rightLed.classList.add('led-pulse-surprised');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "🟡 LEDs: Oscilação Viva Curiosa (Amarelo ~0.7s)";
+                    pulseLabel.style.color = "#facc15";
+                }
+            } else if (face === 'love') {
+                leftLed.classList.add('led-pulse-love');
+                rightLed.classList.add('led-pulse-love');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "💖 LEDs: Batimento Duplo Cardíaco (Rosa ~1.1s)";
+                    pulseLabel.style.color = "#f472b6";
+                }
             } else {
-                setLedColor('dim');
+                leftLed.classList.add('led-pulse-default');
+                rightLed.classList.add('led-pulse-default');
+                if (pulseLabel) {
+                    pulseLabel.innerText = "🔵 LEDs: Pulsação Zen Rítmica (Ciano ~2.3s)";
+                    pulseLabel.style.color = "var(--accent-cyan)";
+                }
             }
 
             drawOled();
@@ -931,14 +1009,17 @@
             leftLed.className = 'side-led';
             rightLed.className = 'side-led';
             if (color === 'green') {
-                leftLed.classList.add('led-green-glow');
-                rightLed.classList.add('led-green-glow');
+                leftLed.classList.add('led-pulse-happy');
+                rightLed.classList.add('led-pulse-happy');
             } else if (color === 'red') {
-                leftLed.classList.add('led-red-glow');
-                rightLed.classList.add('led-red-glow');
+                leftLed.classList.add('led-pulse-angry');
+                rightLed.classList.add('led-pulse-angry');
             } else if (color === 'yellow') {
-                leftLed.classList.add('led-yellow-glow');
-                rightLed.classList.add('led-yellow-glow');
+                leftLed.classList.add('led-pulse-surprised');
+                rightLed.classList.add('led-pulse-surprised');
+            } else {
+                leftLed.classList.add('led-pulse-default');
+                rightLed.classList.add('led-pulse-default');
             }
         }
 

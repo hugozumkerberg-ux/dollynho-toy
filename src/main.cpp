@@ -356,6 +356,56 @@ void askGemini(String userQuery) {
     }
 }
 
+// ----------------------------------------------------
+// Pulsação das Lâmpadas de LED Conforme o Sentimento
+// ----------------------------------------------------
+void updatePulsingLeds() {
+    if (showingText) return; // Não interfere durante reprodução de texto/notificações
+
+    unsigned long now = millis();
+    int potValue = analogRead(PIN_POTENCIOMETRO);
+    uint8_t maxBrightness = map(potValue, 0, 4095, 25, 255);
+
+    float pulse = 0.0f;
+    uint8_t r = 0, g = 0, b = 0;
+
+    if (roboEyes.happy) {
+        // FELIZ (^ ^): Pulso respiratório suave e alegre em Verde Esmeralda (~1.3s)
+        float wave = (sin(now * 0.0048f) + 1.0f) * 0.5f;
+        pulse = 0.25f + 0.75f * wave;
+        r = 0;
+        g = 255;
+        b = 30;
+    }
+    else if (roboEyes.angry) {
+        // BRAVO (> <): Pulso tenso e acelerado em Vermelho Vivo (~0.5s) com pico agressivo
+        float wave = (sin(now * 0.0125f) + 1.0f) * 0.5f;
+        pulse = 0.20f + 0.80f * (wave * wave);
+        r = 255;
+        g = 0;
+        b = 0;
+    }
+    else if (roboEyes.tired) {
+        // CANSADO / TRISTE (T_T): Respiração lenta, suave e fading em Âmbar/Vermelho (~3.5s)
+        float wave = (sin(now * 0.0018f) + 1.0f) * 0.5f;
+        pulse = 0.10f + 0.55f * wave;
+        r = 230;
+        g = 40;
+        b = 0;
+    }
+    else {
+        // NORMAL / CURIOSO (o o): Pulso calmo e rítmico em Ciano Zen (~2.3s)
+        float wave = (sin(now * 0.0028f) + 1.0f) * 0.5f;
+        pulse = 0.20f + 0.80f * wave;
+        r = 0;
+        g = 180;
+        b = 230;
+    }
+
+    uint8_t scaledBrightness = (uint8_t)(maxBrightness * pulse);
+    setLedsColor(r, g, b, scaledBrightness);
+}
+
 void setup() {
     Serial.begin(115200);
     delay(800);
@@ -409,13 +459,8 @@ void setup() {
 void loop() {
     unsigned long now = millis();
 
-    // Controle de brilho analógico via potenciômetro
-    int potValue = analogRead(PIN_POTENCIOMETRO);
-    uint8_t brightness = map(potValue, 0, 4095, 30, 255);
-
-    if (roboEyes.happy) setLedsColor(0, 255, 0, brightness);
-    else if (roboEyes.angry || roboEyes.tired) setLedsColor(255, 0, 0, brightness);
-    else setLedsColor(0, 200, 200, brightness);
+    // Atualiza a pulsação contínua dos LEDs conforme o sentimento
+    updatePulsingLeds();
 
     if (showingText) {
         if (now - textStartTime > textDuration) {
