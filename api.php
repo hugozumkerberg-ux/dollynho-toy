@@ -35,14 +35,40 @@ switch ($action) {
             exit;
         }
 
+        // Ignora 'blink' caso venha de abas de navegador antigas em cache
+        if (strtolower(trim($cmd)) === 'blink') {
+            echo json_encode(['success' => true, 'ignored' => true, 'message' => 'Blink automatico ignorado']);
+            exit;
+        }
+
+        $queue = [];
+        if (file_exists($queueFile)) {
+            $data = json_decode(file_get_contents($queueFile), true);
+            if (is_array($data)) {
+                $queue = isset($data['cmd']) ? [$data] : $data;
+            }
+        }
+
+        // Limpa itens antigos (> 60 segundos)
+        $now = time();
+        $queue = array_values(array_filter($queue, function($item) use ($now) {
+            return ($now - ($item['timestamp'] ?? 0)) < 60;
+        }));
+
         $cmdItem = [
             'id'        => microtime(true),
             'cmd'       => trim($cmd),
-            'timestamp' => time(),
+            'timestamp' => $now,
             'executed'  => false
         ];
+        $queue[] = $cmdItem;
 
-        file_put_contents($queueFile, json_encode($cmdItem));
+        // Mantém no máximo os 10 últimos comandos
+        if (count($queue) > 10) {
+            $queue = array_slice($queue, -10);
+        }
+
+        file_put_contents($queueFile, json_encode($queue));
 
         echo json_encode([
             'success' => true,
@@ -73,20 +99,30 @@ switch ($action) {
         // Checa se há comando na fila aguardando execução
         $pendingCmd = null;
         if (file_exists($queueFile)) {
-            $queueData = json_decode(file_get_contents($queueFile), true);
-            if (!empty($queueData) && empty($queueData['executed'])) {
-                // Comando expira após 45 segundos se não for consumido
-                if (time() - ($queueData['timestamp'] ?? 0) < 45) {
+            $data = json_decode(file_get_contents($queueFile), true);
+            $queue = [];
+            if (is_array($data)) {
+                $queue = isset($data['cmd']) ? [$data] : $data;
+            }
+
+            $now = time();
+            $updated = false;
+            foreach ($queue as &$item) {
+                if (empty($item['executed']) && ($now - ($item['timestamp'] ?? 0) < 45)) {
                     $pendingCmd = [
-                        'cmd' => $queueData['cmd'],
-                        'id'  => $queueData['id']
+                        'cmd' => $item['cmd'],
+                        'id'  => $item['id']
                     ];
                     if (!empty($_GET['auto_ack']) || !empty($inputData['auto_ack'])) {
-                        $queueData['executed'] = true;
-                        $queueData['ack_time'] = time();
-                        file_put_contents($queueFile, json_encode($queueData));
+                        $item['executed'] = true;
+                        $item['ack_time'] = $now;
+                        $updated = true;
                     }
+                    break; // Pega o primeiro comando pendente na fila FIFO
                 }
+            }
+            if ($updated) {
+                file_put_contents($queueFile, json_encode($queue));
             }
         }
 
@@ -102,12 +138,19 @@ switch ($action) {
     // -------------------------------------------------------------
     case 'ack':
         if (file_exists($queueFile)) {
-            $queueData = json_decode(file_get_contents($queueFile), true);
-            if (!empty($queueData)) {
-                $queueData['executed'] = true;
-                $queueData['ack_time'] = time();
-                file_put_contents($queueFile, json_encode($queueData));
+            $data = json_decode(file_get_contents($queueFile), true);
+            $queue = is_array($data) ? (isset($data['cmd']) ? [$data] : $data) : [];
+            $now = time();
+            foreach ($queue as &$item) {
+                if (!empty($id) && isset($item['id']) && $item['id'] == $id) {
+                    $item['executed'] = true;
+                    $item['ack_time'] = $now;
+                } else if (empty($id) && empty($item['executed'])) {
+                    $item['executed'] = true;
+                    $item['ack_time'] = $now;
+                }
             }
+            file_put_contents($queueFile, json_encode($queue));
         }
         echo json_encode(['success' => true, 'message' => 'Comando confirmado']);
         break;
@@ -141,9 +184,14 @@ switch ($action) {
 
         // Lê último comando da fila
         if (file_exists($queueFile)) {
-            $q = json_decode(file_get_contents($queueFile), true);
-            $espStatus['last_cmd'] = $q['cmd'] ?? null;
-            $espStatus['last_cmd_executed'] = !empty($q['executed']);
+            $data = json_decode(file_get_contents($queueFile), true);
+            if (is_array($data)) {
+                $lastItem = isset($data['cmd']) ? $data : end($data);
+                if (!empty($lastItem)) {
+                    $espStatus['last_cmd'] = $lastItem['cmd'] ?? null;
+                    $espStatus['last_cmd_executed'] = !empty($lastItem['executed']);
+                }
+            }
         }
 
         echo json_encode($espStatus);

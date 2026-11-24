@@ -1998,14 +1998,18 @@
             }
         }
 
-        function triggerBlink() {
+        function visualBlink() {
             isBlinking = true;
             drawOled();
-            sendEsp32Command('blink');
             setTimeout(() => {
                 isBlinking = false;
                 drawOled();
             }, 180);
+        }
+
+        function triggerBlink() {
+            visualBlink();
+            sendEsp32Command('blink');
         }
 
         // Renderização dos Olhos no Canvas (Simulação SSD1306 128x64 escalado x2)
@@ -2177,10 +2181,10 @@
             ctx.restore();
         }
 
-        // Piscar automático a cada 4 segundos
+        // Piscar automático a cada 4 segundos apenas no visor do dashboard
         setInterval(() => {
             if (currentFace !== 'sleepy' && !songVisualInterval) {
-                triggerBlink();
+                visualBlink();
             }
         }, 4200);
 
