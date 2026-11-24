@@ -827,17 +827,17 @@
         <div class="coin-badge-count">x<span id="toastCoinCount">1</span></div>
     </div>
 
-    <!-- Banner de Status de Conexão USB / Web Serial -->
-    <div id="usbConnectBanner" style="background: linear-gradient(90deg, #1e293b, #0f172a); border: 1px solid #ef4444; border-left: 5px solid #ef4444; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 16px;">
+    <!-- Banner de Status de Conexão Sem Fio / Nuvem API -->
+    <div id="cloudStatusBanner" style="background: linear-gradient(90deg, #064e3b, #0f172a); border: 1px solid #22c55e; border-left: 5px solid #22c55e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 16px;">
         <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 12px #ef4444; flex-shrink: 0;" id="usbStatusDot"></span>
-            <span id="usbStatusText" style="color: #e2e8f0; font-size: 0.9rem;">
-                <strong style="color: #f87171;">Robô Desconectado:</strong> Para que o site controle seu robô físico (expressões OLED, buzzer, músicas e LEDs), conecte o cabo USB e clique no botão ao lado.
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 12px #22c55e; flex-shrink: 0;" id="cloudStatusDot"></span>
+            <span id="cloudStatusText" style="color: #e2e8f0; font-size: 0.9rem;">
+                <strong style="color: #4ade80;">📡 Robô 100% Sem Fio (Modo Nuvem):</strong> Consumindo a API Hostinger em tempo real via Wi-Fi. Todos os botões, músicas e expressões funcionam sem cabo!
             </span>
         </div>
-        <button id="btnBannerConnect" onclick="connectWebSerial()" style="background: linear-gradient(135deg, #0284c7, #0369a1); color: white; border: 1px solid #38bdf8; padding: 8px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.88rem; box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35); white-space: nowrap; transition: all 0.2s ease;">
-            🔌 Conectar USB no Navegador
-        </button>
+        <div id="cloudPingBadge" style="background:#0f172a; border: 1px solid #22c55e; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; color: #86efac; font-weight: 600; white-space: nowrap;">
+            🟢 API Hostinger: Conectado
+        </div>
     </div>
 
     <!-- Header Principal -->
@@ -854,10 +854,7 @@
         </div>
 
         <div class="badges-top">
-            <button id="btnWebSerial" class="badge" onclick="toggleWebSerial()" style="cursor:pointer; background: #0284c7; color: #fff; border: 1px solid #38bdf8; font-weight: bold; display: flex; align-items: center; gap: 6px;" title="Clique para conectar ou desconectar o ESP32 diretamente pela porta USB do seu computador">
-                <span>🔌</span> <span id="btnWebSerialText">Conectar USB</span>
-            </button>
-            <div class="badge" id="esp32Badge" style="background: #3f1515; border-color: #ef4444; color: #fca5a5;">● ESP32: Desconectado</div>
+            <div class="badge online" id="esp32Badge">● Modo Nuvem Wi-Fi: Ativo</div>
             <div class="badge online">● Wi-Fi: Dollynho-Toy (AP)</div>
             <div class="badge b3">● B3: BBAS3 Ativa</div>
             <div class="badge" id="hudCoinBadge" onclick="play8Bit('coin')" style="background:#451a03; color:#fef08a; border:1px solid #eab308; cursor:pointer;" title="Clique para pegar uma moeda do Mario!">
@@ -3176,117 +3173,34 @@
         }
 
         function updateWebSerialUI(connected) {
-            const btnText = document.getElementById('btnWebSerialText');
             const termBtn = document.getElementById('terminalWebSerialBtn');
-            const esp32Badge = document.getElementById('esp32Badge');
             const terminalBadge = document.getElementById('terminalStatusBadge');
-            const banner = document.getElementById('usbConnectBanner');
-            const dot = document.getElementById('usbStatusDot');
-            const text = document.getElementById('usbStatusText');
-            const bannerBtn = document.getElementById('btnBannerConnect');
 
             if (connected) {
-                if (btnText) btnText.innerText = "Desconectar USB";
                 if (termBtn) {
                     termBtn.innerText = "🔌 Desconectar USB";
                     termBtn.style.background = "#7f1d1d";
                     termBtn.style.borderColor = "#ef4444";
                 }
-                if (esp32Badge) {
-                    esp32Badge.className = 'badge online';
-                    esp32Badge.style.background = '';
-                    esp32Badge.style.borderColor = '';
-                    esp32Badge.style.color = '';
-                    esp32Badge.innerText = '● ESP32: Conectado (USB)';
-                }
                 if (terminalBadge) {
                     terminalBadge.style.borderColor = '#22c55e';
                     terminalBadge.style.color = '#86efac';
                     terminalBadge.style.background = '#064e3b';
-                    terminalBadge.innerText = '● Conectado (Web Serial @ 115200)';
-                }
-                if (banner) {
-                    banner.style.borderColor = '#22c55e';
-                    banner.style.borderLeftColor = '#22c55e';
-                    banner.style.background = 'linear-gradient(90deg, #064e3b, #0f172a)';
-                }
-                if (dot) {
-                    dot.style.background = '#22c55e';
-                    dot.style.boxShadow = '0 0 12px #22c55e';
-                }
-                if (text) {
-                    text.innerHTML = '<strong style="color: #4ade80;">Dollynho Toy Conectado:</strong> Comunicação USB ativa a 115200 baud! Comandos, sons e expressões no robô estão sincronizados em tempo real.';
-                }
-                if (bannerBtn) {
-                    bannerBtn.innerText = '🔌 Desconectar';
-                    bannerBtn.style.background = '#334155';
-                    bannerBtn.style.borderColor = '#64748b';
-                    bannerBtn.onclick = disconnectWebSerial;
+                    terminalBadge.innerText = '● Conectado USB (Web Serial @ 115200)';
                 }
             } else {
-                if (btnText) btnText.innerText = "Conectar USB";
                 if (termBtn) {
-                    termBtn.innerText = "🔌 Conectar USB Direto";
-                    termBtn.style.background = "#0284c7";
-                    termBtn.style.borderColor = "#38bdf8";
+                    termBtn.innerText = "🔌 Conectar USB (Opcional)";
+                    termBtn.style.background = "#1e293b";
+                    termBtn.style.borderColor = "#475569";
                 }
-                if (esp32Badge) {
-                    esp32Badge.className = 'badge';
-                    esp32Badge.style.background = '#3f1515';
-                    esp32Badge.style.borderColor = '#ef4444';
-                    esp32Badge.style.color = '#fca5a5';
-                    esp32Badge.innerText = '● ESP32: Desconectado';
-                }
-                if (terminalBadge) {
-                    terminalBadge.style.borderColor = '#ef4444';
-                    terminalBadge.style.color = '#fca5a5';
-                    terminalBadge.style.background = '#450a0a';
-                    terminalBadge.innerText = '● Desconectado (Clique Conectar USB)';
-                }
-                if (banner) {
-                    banner.style.borderColor = '#ef4444';
-                    banner.style.borderLeftColor = '#ef4444';
-                    banner.style.background = 'linear-gradient(90deg, #1e293b, #0f172a)';
-                }
-                if (dot) {
-                    dot.style.background = '#ef4444';
-                    dot.style.boxShadow = '0 0 12px #ef4444';
-                }
-                if (text) {
-                    text.innerHTML = '<strong style="color: #f87171;">Robô Desconectado:</strong> Para que o site controle seu robô físico (expressões OLED, buzzer, músicas e LEDs), conecte o cabo USB e clique no botão ao lado.';
-                }
-                if (bannerBtn) {
-                    bannerBtn.innerText = '🔌 Conectar USB no Navegador';
-                    bannerBtn.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
-                    bannerBtn.style.borderColor = '#38bdf8';
-                    bannerBtn.onclick = connectWebSerial;
-                }
+                checkEsp32Status();
             }
         }
 
         async function autoConnectWebSerial() {
-            if ('serial' in navigator) {
-                try {
-                    const ports = await navigator.serial.getPorts();
-                    if (ports && ports.length > 0) {
-                        webSerialPort = ports[0];
-                        await webSerialPort.open({ baudRate: 115200 });
-                        isWebSerialConnected = true;
-                        updateWebSerialUI(true);
-                        appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), "[SISTEMA] Reconectado automaticamente ao ESP32 via USB!", 'system');
-                        readWebSerialStream();
-
-                        const now = new Date();
-                        const hh = String(now.getHours()).padStart(2, '0');
-                        const mm = String(now.getMinutes()).padStart(2, '0');
-                        setTimeout(() => sendEsp32Command(`time:${hh}:${mm}`), 400);
-                    }
-                } catch (e) {
-                    console.log("Auto-connect silencioso:", e);
-                }
-            }
+            // Desativado por padrão: O robô funciona 100% sem fio consumindo a API da Hostinger!
         }
-        window.addEventListener('load', autoConnectWebSerial);
 
         async function readWebSerialStream() {
             while (webSerialPort && webSerialPort.readable && isWebSerialConnected) {
@@ -3322,7 +3236,10 @@
         async function sendEsp32Command(cmd) {
             if (!cmd) return;
 
-            // 1. Prioridade: Se Web Serial estiver conectado diretamente no navegador via USB
+            // Modo Principal: Envio 100% sem fio via Nuvem Hostinger (API)
+            sendViaCloudApi(cmd);
+
+            // Se o usuário estiver opcionalmente conectado via cabo USB, também replica
             if (isWebSerialConnected && webSerialPort && webSerialPort.writable) {
                 try {
                     const encoder = new TextEncoder();
@@ -3333,15 +3250,9 @@
                     } finally {
                         writer.releaseLock();
                     }
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ENVIADO USB] ➔ ${cmd}`, 'sent');
-                    return;
-                } catch (err) {
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO USB] ${err.message}. Alternando para Nuvem...`, 'error');
-                }
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[USB LOCAL] ➔ ${cmd}`, 'sent');
+                } catch (err) {}
             }
-
-            // 2. Envio Remoto via Nuvem Hostinger (Wi-Fi)
-            sendViaCloudApi(cmd);
         }
 
         async function sendViaCloudApi(cmd) {
@@ -3422,14 +3333,12 @@
         }
 
         async function checkEsp32Status() {
-            if (isWebSerialConnected) return; // Não sobrescreve se usuário estiver com Web Serial USB ativo
-
             const esp32Badge = document.getElementById('esp32Badge');
             const terminalBadge = document.getElementById('terminalStatusBadge');
-            const banner = document.getElementById('webSerialBanner');
-            const dot = document.getElementById('serialDot');
-            const text = document.getElementById('serialStatusText');
-            const bannerBtn = document.getElementById('bannerConnectBtn');
+            const banner = document.getElementById('cloudStatusBanner');
+            const dot = document.getElementById('cloudStatusDot');
+            const text = document.getElementById('cloudStatusText');
+            const pingBadge = document.getElementById('cloudPingBadge');
 
             const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
             const cloudApiUrl = isLocalHost ? 'https://bazardasnovidades.com/robo/api.php' : 'api.php';
@@ -3440,7 +3349,10 @@
                 if (data.online) {
                     if (esp32Badge) {
                         esp32Badge.className = 'badge online';
-                        esp32Badge.innerText = `● ESP32 Nuvem: Online (${data.ip || 'Wi-Fi'})`;
+                        esp32Badge.style.background = '';
+                        esp32Badge.style.borderColor = '';
+                        esp32Badge.style.color = '';
+                        esp32Badge.innerText = `● ESP32 Nuvem: ${data.ip || 'Online'}`;
                     }
                     if (terminalBadge) {
                         terminalBadge.style.borderColor = '#22c55e';
@@ -3458,10 +3370,12 @@
                         dot.style.boxShadow = '0 0 12px #22c55e';
                     }
                     if (text) {
-                        text.innerHTML = `<strong style="color: #4ade80;">📡 Robô Conectado via Wi-Fi:</strong> IP: <code>${data.ip || 'Ativo'}</code> | Sinal: ${data.rssi} dBm | Humor: ${data.mood}. Todos os comandos são enviados sem fio pela Nuvem!`;
+                        text.innerHTML = `<strong style="color: #4ade80;">📡 Robô Conectado via Wi-Fi:</strong> IP: <code>${data.ip || 'Ativo'}</code> | Sinal: ${data.rssi} dBm | Humor: ${data.mood}. Consumindo a API Hostinger em tempo real!`;
                     }
-                    if (bannerBtn) {
-                        bannerBtn.innerText = '🔌 Conectar USB (Opcional)';
+                    if (pingBadge) {
+                        pingBadge.style.borderColor = '#22c55e';
+                        pingBadge.style.color = '#86efac';
+                        pingBadge.innerText = `🟢 ESP32 Online (${data.ip || 'Wi-Fi'})`;
                     }
                     return;
                 }
@@ -3469,61 +3383,36 @@
                 // Nuvem inacessível no momento
             }
 
-            // Fallback: tenta servidor local Node.js se estiver rodando localmente
-            fetch('/api/status')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.connected) {
-                        if (esp32Badge) {
-                            esp32Badge.className = 'badge online';
-                            esp32Badge.innerText = `● ESP32: Conectado (${data.port || 'COM8'})`;
-                        }
-                        if (terminalBadge) {
-                            terminalBadge.style.borderColor = '#22c55e';
-                            terminalBadge.style.color = '#86efac';
-                            terminalBadge.style.background = '#064e3b';
-                            terminalBadge.innerText = `● Conectado (${data.port || 'COM8'} @ ${data.baudRate})`;
-                        }
-                    } else {
-                        setDisconnectedUI();
-                    }
-                })
-                .catch(() => {
-                    setDisconnectedUI();
-                });
-
-            function setDisconnectedUI() {
-                if (esp32Badge) {
-                    esp32Badge.className = 'badge';
-                    esp32Badge.style.background = '#3f1515';
-                    esp32Badge.style.borderColor = '#ef4444';
-                    esp32Badge.style.color = '#fca5a5';
-                    esp32Badge.innerText = `● ESP32: Desconectado`;
-                }
-                if (terminalBadge) {
-                    terminalBadge.style.borderColor = '#ef4444';
-                    terminalBadge.style.color = '#fca5a5';
-                    terminalBadge.style.background = '#450a0a';
-                    terminalBadge.innerText = `● Desconectado (Clique Conectar USB ou Conecte Wi-Fi)`;
-                }
-                if (banner) {
-                    banner.style.borderColor = '#ef4444';
-                    banner.style.borderLeftColor = '#ef4444';
-                    banner.style.background = 'linear-gradient(90deg, #1e293b, #0f172a)';
-                }
-                if (dot) {
-                    dot.style.background = '#ef4444';
-                    dot.style.boxShadow = '0 0 12px #ef4444';
-                }
-                if (text) {
-                    text.innerHTML = '<strong style="color: #f87171;">Robô Desconectado:</strong> Para controlar o robô físico, conecte o cabo USB ou certifique-se de que ele esteja conectado à rede Wi-Fi configurada.';
-                }
-                if (bannerBtn) {
-                    bannerBtn.innerText = '🔌 Conectar USB no Navegador';
-                    bannerBtn.style.background = 'linear-gradient(135deg, #0284c7, #0369a1)';
-                    bannerBtn.style.borderColor = '#38bdf8';
-                    bannerBtn.onclick = connectWebSerial;
-                }
+            // Se o ESP32 não respondeu nos últimos 8s
+            if (esp32Badge) {
+                esp32Badge.className = 'badge';
+                esp32Badge.style.background = '#451a03';
+                esp32Badge.style.borderColor = '#eab308';
+                esp32Badge.style.color = '#fef08a';
+                esp32Badge.innerText = `● ESP32: Aguardando Wi-Fi`;
+            }
+            if (terminalBadge) {
+                terminalBadge.style.borderColor = '#eab308';
+                terminalBadge.style.color = '#fef08a';
+                terminalBadge.style.background = '#451a03';
+                terminalBadge.innerText = `● Aguardando Wi-Fi do ESP32`;
+            }
+            if (banner) {
+                banner.style.borderColor = '#eab308';
+                banner.style.borderLeftColor = '#eab308';
+                banner.style.background = 'linear-gradient(90deg, #451a03, #0f172a)';
+            }
+            if (dot) {
+                dot.style.background = '#eab308';
+                dot.style.boxShadow = '0 0 12px #eab308';
+            }
+            if (text) {
+                text.innerHTML = `<strong style="color: #fde047;">⏳ Aguardando Robô:</strong> Ligue o Dollynho Toy na fonte/bateria. Ele conectará automaticamente no Wi-Fi e começará a consumir a API!`;
+            }
+            if (pingBadge) {
+                pingBadge.style.borderColor = '#eab308';
+                pingBadge.style.color = '#fde047';
+                pingBadge.innerText = `🟡 Aguardando Wi-Fi...`;
             }
         }
 

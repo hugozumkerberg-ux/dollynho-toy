@@ -780,6 +780,7 @@ void cloudPollingTask(void* pvParameters) {
 
 void setup() {
     Serial.begin(115200);
+    Serial.setTxTimeoutMs(0); // Não bloqueia quando rodando sem cabo USB (carregador/bateria)
     delay(400);
     Serial.println("\n==============================================");
     Serial.println("  🤖 Dollynho Toy: Músicas 8-Bits + Nuvem Hostinger ");
