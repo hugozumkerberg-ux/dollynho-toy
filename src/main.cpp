@@ -160,7 +160,11 @@ enum VisualSongTheme {
     THEME_MARIO,
     THEME_STAR_WARS_IMPERIAL,
     THEME_STAR_WARS_MAIN,
-    THEME_SENNA
+    THEME_SENNA,
+    THEME_PACMAN,
+    THEME_TOP_GUN,
+    THEME_ARCADE_SPACE,
+    THEME_80S_SYNTH
 };
 
 // ----------------------------------------------------
@@ -188,6 +192,14 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
             drawStarWarsScene(i, "MAIN THEME", display);
         } else if (theme == THEME_SENNA) {
             drawSennaScene(i, display);
+        } else if (theme == THEME_PACMAN) {
+            drawPacmanScene(i, display);
+        } else if (theme == THEME_TOP_GUN) {
+            drawTopGunScene(i, display);
+        } else if (theme == THEME_ARCADE_SPACE) {
+            drawArcadeSpaceScene(i, display);
+        } else if (theme == THEME_80S_SYNTH) {
+            drawTakeOnMeScene(i, display);
         }
 
         if (pitch > 0) {
@@ -205,6 +217,58 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
                     analogWrite(PIN_LED_AMARELO, brightness);
                     analogWrite(PIN_LED_VERMELHO, (brightness * 40) / 255);
                     rgbLedWrite(RGB_BUILTIN, 255, 215, 0); // Amarelo Dourado
+                }
+            } else if (theme == THEME_PACMAN) {
+                // Amarelo Pac-Man e Vermelho Fantasma Blinky
+                if (i % 2 == 0) {
+                    analogWrite(PIN_LED_AMARELO, brightness);
+                    analogWrite(PIN_LED_VERMELHO, 0);
+                    analogWrite(PIN_LED_VERDE, (brightness * 140) / 255);
+                    rgbLedWrite(RGB_BUILTIN, 255, 220, 0);
+                } else {
+                    analogWrite(PIN_LED_VERMELHO, brightness);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERDE, 0);
+                    rgbLedWrite(RGB_BUILTIN, 255, 20, 20);
+                }
+            } else if (theme == THEME_TOP_GUN) {
+                // Caça supersônico: Vermelho e Azul de pós-combustão
+                if (i % 2 == 0) {
+                    analogWrite(PIN_LED_VERMELHO, brightness);
+                    analogWrite(PIN_LED_AMARELO, (brightness * 50) / 255);
+                    analogWrite(PIN_LED_VERDE, 0);
+                    rgbLedWrite(RGB_BUILTIN, 255, 60, 0);
+                } else {
+                    analogWrite(PIN_LED_VERMELHO, 0);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERDE, (brightness * 80) / 255);
+                    rgbLedWrite(RGB_BUILTIN, 0, 180, 255);
+                }
+            } else if (theme == THEME_ARCADE_SPACE) {
+                // Verde arcade e ciano espacial
+                if (i % 2 == 0) {
+                    analogWrite(PIN_LED_VERDE, brightness);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERMELHO, 0);
+                    rgbLedWrite(RGB_BUILTIN, 0, 255, 120);
+                } else {
+                    analogWrite(PIN_LED_VERDE, (brightness * 180) / 255);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERMELHO, (brightness * 80) / 255);
+                    rgbLedWrite(RGB_BUILTIN, 180, 0, 255);
+                }
+            } else if (theme == THEME_80S_SYNTH) {
+                // Neon Anos 80 (Magenta e Dourado)
+                if (i % 2 == 0) {
+                    analogWrite(PIN_LED_VERMELHO, brightness);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERDE, 0);
+                    rgbLedWrite(RGB_BUILTIN, 255, 0, 180);
+                } else {
+                    analogWrite(PIN_LED_AMARELO, brightness);
+                    analogWrite(PIN_LED_VERDE, (brightness * 120) / 255);
+                    analogWrite(PIN_LED_VERMELHO, (brightness * 60) / 255);
+                    rgbLedWrite(RGB_BUILTIN, 255, 230, 0);
                 }
             } else if (pitch > 550) {
                 setLedsColor(0, 255, 0, brightness);
@@ -234,6 +298,28 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
     ledsOff(); // Garante que tudo apaga ao final da música
     showingText = false; // Retorna aos olhinhos orgânicos do RoboEyes
     roboEyes.update();
+}
+
+void playLaserSfx() {
+    for (int f = 1600; f >= 200; f -= 75) {
+        buzzerTone(f);
+        delay(6);
+    }
+    buzzerNoTone();
+    ledsOff();
+}
+
+void play1UpSfx() {
+    int notes[] = {NOTE_E5, NOTE_G5, NOTE_E6, NOTE_C6, NOTE_D6, NOTE_G6};
+    int durs[]  = {100,     100,     100,     100,     100,     250};
+    for (int i = 0; i < 6; i++) {
+        buzzerTone(notes[i]);
+        setLedsColor(0, 255, 0, 200);
+        delay(durs[i]);
+        buzzerNoTone();
+        ledsOff();
+        delay(20);
+    }
 }
 
 int totalCoinsCollected = 0;
@@ -589,6 +675,35 @@ void loop() {
             roboEyes.setMood(HAPPY);
             roboEyes.anim_laugh();
             playSong(SONG_SENNA_VITORIA, LEN_SENNA_VITORIA, THEME_SENNA);
+        }
+        else if (cmd == "pacman" || cmd == "pac") {
+            Serial.println("[Música] 🟡 Pac-Man Arcade 1980 + Labirinto no OLED!");
+            roboEyes.setMood(HAPPY);
+            playSong(SONG_PACMAN_FULL, LEN_PACMAN_FULL, THEME_PACMAN);
+        }
+        else if (cmd == "topgun" || cmd == "dangerzone" || cmd == "f14") {
+            Serial.println("[Música] ✈️ Top Gun: Danger Zone + Caça F-14 Tomcat no OLED!");
+            roboEyes.setMood(DEFAULT);
+            playSong(SONG_TOP_GUN, LEN_TOP_GUN, THEME_TOP_GUN);
+        }
+        else if (cmd == "space" || cmd == "invaders" || cmd == "arcade" || cmd == "escape") {
+            Serial.println("[Música] 👾 Space Invaders Arcade Escape + Batalha Espacial no OLED!");
+            roboEyes.setMood(DEFAULT);
+            playSong(SONG_ARCADE_SPACE, LEN_ARCADE_SPACE, THEME_ARCADE_SPACE);
+        }
+        else if (cmd == "takeonme" || cmd == "80s" || cmd == "anos80" || cmd == "aha") {
+            Serial.println("[Música] 📼 Anos 80: Take On Me (A-ha) + Synthwave Grid no OLED!");
+            roboEyes.setMood(HAPPY);
+            roboEyes.anim_laugh();
+            playSong(SONG_TAKE_ON_ME, LEN_TAKE_ON_ME, THEME_80S_SYNTH);
+        }
+        else if (cmd == "laser") {
+            Serial.println("[Efeito] ⚡ Disparo Laser 8-Bit!");
+            playLaserSfx();
+        }
+        else if (cmd == "1up") {
+            Serial.println("[Efeito] ⭐ Vida Extra 1-Up Arcade!");
+            play1UpSfx();
         }
         else {
             askGemini(cmd);

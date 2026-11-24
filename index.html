@@ -981,6 +981,18 @@
                     <button class="btn-music" id="btnSenna" onclick="play8Bit('senna')" style="border-color: #facc15; background: #2e1d08;">
                         <span>🏎️</span> Ayrton Senna: Tema da Vitória
                     </button>
+                    <button class="btn-music" id="btnPacman" onclick="play8Bit('pacman')" style="border-color: #facc15; background: #1c1917;">
+                        <span>🟡</span> Pac-Man Arcade 1980 (Wakka)
+                    </button>
+                    <button class="btn-music" id="btnTopGun" onclick="play8Bit('topgun')" style="border-color: #38bdf8; background: #082f49;">
+                        <span>✈️</span> Top Gun: Danger Zone (80s)
+                    </button>
+                    <button class="btn-music" id="btnSpaceInvaders" onclick="play8Bit('space')" style="border-color: #a855f7; background: #2e1065;">
+                        <span>👾</span> Space Invaders Arcade Escape
+                    </button>
+                    <button class="btn-music" id="btnTakeOnMe" onclick="play8Bit('takeonme')" style="border-color: #ec4899; background: #4a044e;">
+                        <span>📼</span> Anos 80: Take On Me (A-ha)
+                    </button>
                     <button class="btn-music" id="btnStarWarsImperial" onclick="play8Bit('imperial')">
                         <span>⚔️</span> Star Wars: Marcha Imperial
                     </button>
@@ -994,7 +1006,13 @@
                         <span>🧱</span> Tetris (Korobeiniki)
                     </button>
                     <button class="btn-music" id="btnCoin" onclick="play8Bit('coin')">
-                        <span>🪙</span> Som de Moeda / 1-Up
+                        <span>🪙</span> Moeda do Mario (+200 PTS)
+                    </button>
+                    <button class="btn-music" id="btnLaser" onclick="play8Bit('laser')" style="border-color: #22c55e; background: #052e16;">
+                        <span>⚡</span> Disparo Laser 8-Bit
+                    </button>
+                    <button class="btn-music" id="btn1Up" onclick="play8Bit('1up')" style="border-color: #eab308; background: #422006;">
+                        <span>⭐</span> Vida Extra 1-Up Arcade
                     </button>
                 </div>
             </div>
@@ -1062,9 +1080,15 @@
                     <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px;">Comandos Rápidos para Enviar ao ESP32:</div>
                     <div class="quick-cmd-bar">
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('senna')">🏎️ Ayrton Senna</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('pacman')">🟡 Pac-Man</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('topgun')">✈️ Top Gun</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('space')">👾 Space Invaders</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('takeonme')">📼 Take On Me</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('laser')">⚡ Laser</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('1up')">⭐ 1-Up</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('mario')">🍄 Super Mario</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('imperial')">⚔️ Star Wars Marcha</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('starwars')">🚀 Star Wars Principal</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('mario')">🍄 Super Mario</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('tetris')">🧱 Tetris</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('coin')">🪙 Moeda Mario</button>
                         <button class="quick-cmd-btn" onclick="sendEsp32Command('happy')">😊 Humor Feliz</button>
@@ -1082,60 +1106,7 @@
 
                 <!-- Barra de Envio de Comando Manual -->
                 <div class="terminal-input-bar">
-                    <input type="text" class="terminal-input" id="terminalCmdInput" placeholder="Digite um comando para o ESP32 (ex: senna, mario, happy, bbas3, ou uma pergunta pro Gemini)..." onkeydown="if(event.key==='Enter') executeTerminalInput()">
-                    <button class="btn-terminal-send" onclick="executeTerminalInput()">Enviar ➔</button>
-                </div>
-                <div style="font-size: 0.75rem; color: #64748b;">
-                    💡 Dica: Qualquer texto livre digitado acima é automaticamente repassado para a IA Gemini pelo ESP32 caso não seja um comando de música ou emoção.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Aba: Terminal & Logs ESP32 em Tempo Real -->
-    <div id="section-terminal" class="tab-pane" style="display: none;">
-        <div class="card" style="width: 100%;">
-            <div class="card-title">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 1.4rem;">📟</span>
-                    <div>
-                        <div style="font-weight: 800; color: var(--accent-cyan);">Terminal Serial & Logs do ESP32-S3 em Tempo Real</div>
-                        <div style="font-size: 0.78rem; color: #94a3b8; font-weight: normal;">Comunicação bidirecional direta via porta Serial (COM8) • Stream SSE sem recarregar a página</div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● COM8 @ 115200</span>
-                    <button onclick="clearTerminalLogs()" style="background:#1e293b; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Limpar janela do terminal">Limpar 🗑️</button>
-                </div>
-            </div>
-
-            <div class="terminal-container">
-                <!-- Pílulas de Comandos Rápidos -->
-                <div>
-                    <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px;">Comandos Rápidos para Enviar ao ESP32:</div>
-                    <div class="quick-cmd-bar">
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('senna')">🏎️ Ayrton Senna</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('imperial')">⚔️ Star Wars Marcha</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('starwars')">🚀 Star Wars Principal</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('mario')">🍄 Super Mario</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tetris')">🧱 Tetris</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('coin')">🪙 Moeda Mario</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('happy')">😊 Humor Feliz</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('angry')">😠 Humor Bravo</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tired')">😴 Cansado</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('laugh')">😂 Risada</button>
-                        <button class="quick-cmd-btn" onclick="sendEsp32Command('bbas3')">📈 Cotação BBAS3</button>
-                    </div>
-                </div>
-
-                <!-- Janela de Visualização de Logs -->
-                <div class="terminal-box" id="terminalLogBox">
-                    <div class="terminal-line"><span class="terminal-time">--:--:--</span><span class="terminal-log-system">[SISTEMA] Conectando ao terminal de logs do ESP32 via SSE...</span></div>
-                </div>
-
-                <!-- Barra de Envio de Comando Manual -->
-                <div class="terminal-input-bar">
-                    <input type="text" class="terminal-input" id="terminalCmdInput" placeholder="Digite um comando para o ESP32 (ex: senna, mario, happy, bbas3, ou uma pergunta pro Gemini)..." onkeydown="if(event.key==='Enter') executeTerminalInput()">
+                    <input type="text" class="terminal-input" id="terminalCmdInput" placeholder="Digite um comando para o ESP32 (ex: senna, pacman, topgun, space, takeonme, laser, 1up)..." onkeydown="if(event.key==='Enter') executeTerminalInput()">
                     <button class="btn-terminal-send" onclick="executeTerminalInput()">Enviar ➔</button>
                 </div>
                 <div style="font-size: 0.75rem; color: #64748b;">
@@ -2331,6 +2302,212 @@
             }
         }
 
+        function drawPacmanWebCanvas(step) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Labirinto azul néon no topo e na base
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(4, 4, 248, 120);
+            ctx.strokeRect(8, 8, 240, 112);
+
+            // Placar Arcade
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText("PAC-MAN 1980", 16, 26);
+            ctx.textAlign = 'right';
+            ctx.fillText(`SCORE ${(step * 50).toString().padStart(5, '0')}`, 240, 26);
+            ctx.textAlign = 'left';
+
+            // Comidinhas (Dots)
+            for (let dx = 20; dx < 236; dx += 20) {
+                ctx.fillStyle = '#fde047';
+                ctx.fillRect(dx, 62, 4, 4);
+            }
+            // Pílula de Energia
+            ctx.beginPath();
+            ctx.arc(224, 64, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#fef08a';
+            ctx.fill();
+
+            // Pac-Man animado mastigando
+            let pacX = (step * 8) % 280 - 30;
+            let openMouth = (step % 2 === 0);
+            ctx.beginPath();
+            let mouthAngle = openMouth ? 0.25 * Math.PI : 0.05 * Math.PI;
+            ctx.arc(pacX, 64, 18, mouthAngle, Math.PI * 2 - mouthAngle);
+            ctx.lineTo(pacX, 64);
+            ctx.fillStyle = '#facc15';
+            ctx.fill();
+
+            // Fantasma Blinky perseguindo
+            let ghostX = pacX - 44;
+            if (ghostX > -20 && ghostX < 260) {
+                ctx.font = '28px sans-serif';
+                ctx.fillText("👻", ghostX, 74);
+            }
+
+            // Rodapé com WAKKA WAKKA
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 13px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(openMouth ? "WAKKA WAKKA! 🍒" : "WAKKA WAKKA! 🟡", 128, 106);
+            ctx.textAlign = 'left';
+        }
+
+        function drawTopGunWebCanvas(step) {
+            ctx.fillStyle = '#050b14';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Linhas de velocidade no céu
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 1;
+            for (let y = 10; y < 120; y += 18) {
+                let xOff = (step * 20 + y * 7) % 256;
+                ctx.beginPath();
+                ctx.moveTo(xOff, y);
+                ctx.lineTo(xOff + 40, y);
+                ctx.stroke();
+            }
+
+            // Título Anos 80 TOP GUN
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '900 22px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("★ TOP GUN ★", 128, 30);
+            ctx.fillStyle = '#ef4444';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText(">> HIGHWAY TO THE DANGER ZONE <<", 128, 46);
+
+            // Caça F-14 Tomcat voando
+            let jetX = 110 + Math.sin(step * 0.3) * 30;
+            let jetY = 72 + Math.cos(step * 0.25) * 8;
+            ctx.font = '36px sans-serif';
+            ctx.fillText("✈️", jetX, jetY);
+
+            // Pós-combustor (Afterburner)
+            ctx.fillStyle = '#f97316';
+            ctx.fillRect(jetX - 16, jetY - 14, (step % 2 === 0 ? 16 : 22), 4);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(jetX - 22, jetY - 13, 8, 2);
+
+            // Dados de voo no rodapé
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(`MACH 2.${(step % 8) + 1} | ALT: 35.000 FT`, 16, 118);
+            ctx.textAlign = 'right';
+            ctx.fillText("US NAVY VF-1 🦅", 240, 118);
+            ctx.textAlign = 'left';
+        }
+
+        function drawArcadeSpaceWebCanvas(step) {
+            ctx.fillStyle = '#030712';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Estrelas piscando
+            for (let s = 0; s < 18; s++) {
+                let sx = (s * 37 + step * 2) % 252 + 2;
+                let sy = (s * 23) % 80 + 10;
+                ctx.fillStyle = (s % 2 === 0) ? '#ffffff' : '#38bdf8';
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+
+            // Header Arcade Space
+            ctx.fillStyle = '#22c55e';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText("SPACE INVADERS", 16, 20);
+            ctx.textAlign = 'right';
+            ctx.fillText(`SCORE<1> ${(step * 110).toString().padStart(5, '0')}`, 240, 20);
+            ctx.textAlign = 'left';
+
+            // Aliens Space Invaders
+            let alienX = 30 + (step * 6) % 180;
+            let alienY = 28 + ((Math.floor(step / 8)) % 3) * 12;
+            ctx.font = '26px sans-serif';
+            ctx.fillText("👾", alienX, alienY + 20);
+            ctx.fillText("🛸", alienX + 36, alienY + 16);
+
+            // Nave de defesa terrestre
+            let shipX = 110 + Math.sin(step * 0.4) * 45;
+            ctx.fillText("🚀", shipX, 108);
+
+            // Disparos de laser subindo
+            let laserY = 96 - ((step * 10) % 70);
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(shipX + 13, laserY, 3, 10);
+
+            // Bunkers de proteção
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(40, 96, 24, 8);
+            ctx.fillRect(190, 96, 24, 8);
+            ctx.textAlign = 'left';
+        }
+
+        function drawTakeOnMeWebCanvas(step) {
+            ctx.fillStyle = '#090117';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Sol Retrô Synthwave
+            let sunGrad = ctx.createLinearGradient(128, 10, 128, 70);
+            sunGrad.addColorStop(0, '#facc15');
+            sunGrad.addColorStop(1, '#ec4899');
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath();
+            ctx.arc(128, 54, 28, Math.PI, 0, false);
+            ctx.fill();
+
+            // Linhas horizontais cortando o sol
+            ctx.fillStyle = '#090117';
+            for (let ly = 34; ly < 54; ly += 4) {
+                ctx.fillRect(100, ly, 56, 2);
+            }
+
+            // Linha do horizonte
+            ctx.strokeStyle = '#ec4899';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, 54);
+            ctx.lineTo(256, 54);
+            ctx.stroke();
+
+            // Grade de perspectiva 3D dos Anos 80 (Outrun Grid)
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= 256; x += 32) {
+                ctx.beginPath();
+                ctx.moveTo(x, 128);
+                ctx.lineTo(128 + (x - 128) * 0.2, 54);
+                ctx.stroke();
+            }
+            let scrollY = (step * 4) % 14;
+            for (let gy = 56 + scrollY; gy < 128; gy += 14) {
+                ctx.beginPath();
+                ctx.moveTo(0, gy);
+                ctx.lineTo(256, gy);
+                ctx.stroke();
+            }
+
+            // Tipografia Synthwave
+            ctx.fillStyle = '#f43f5e';
+            ctx.font = 'italic 900 15px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("📼 A-HA 1985: TAKE ON ME 📼", 128, 18);
+
+            // Equalizador animado
+            for (let b = 0; b < 6; b++) {
+                let h = (Math.abs((step + b * 2) % 12 - 6) + 3) * 4;
+                ctx.fillStyle = '#06b6d4';
+                ctx.fillRect(12 + b * 6, 50 - h, 4, h);
+                ctx.fillStyle = '#e11d48';
+                ctx.fillRect(208 + b * 6, 50 - h, 4, h);
+            }
+            ctx.textAlign = 'left';
+        }
+
         let songVisualInterval = null;
 
         function startSongVisual(type, title, totalDurationMs) {
@@ -2346,6 +2523,14 @@
                     drawMarioCoinWebCanvas(step);
                 } else if (type === 'senna') {
                     drawSennaWebCanvas(step);
+                } else if (type === 'pacman') {
+                    drawPacmanWebCanvas(step);
+                } else if (type === 'topgun') {
+                    drawTopGunWebCanvas(step);
+                } else if (type === 'space') {
+                    drawArcadeSpaceWebCanvas(step);
+                } else if (type === 'takeonme') {
+                    drawTakeOnMeWebCanvas(step);
                 }
             }, 55);
 
@@ -2364,6 +2549,12 @@
 
             const espSongMap = {
                 'senna': 'senna',
+                'pacman': 'pacman',
+                'topgun': 'topgun',
+                'space': 'space',
+                'takeonme': 'takeonme',
+                'laser': 'laser',
+                '1up': '1up',
                 'imperial': 'imperial',
                 'starwars_main': 'starwars',
                 'mario': 'mario',
@@ -2385,6 +2576,137 @@
                     isMusicPlaying = false;
                     setLedColor('off');
                 }, 1300);
+            } else if (song === 'laser') {
+                for (let f = 1400; f >= 250; f -= 80) {
+                    playTone(f, 15, 'sawtooth', (1400 - f) * 0.15);
+                }
+                setLedColor('cyan');
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, 250);
+            } else if (song === '1up') {
+                const notes = [
+                    {f: 659, d: 100}, {f: 784, d: 100}, {f: 1318, d: 100},
+                    {f: 1046, d: 100}, {f: 1174, d: 100}, {f: 1568, d: 250}
+                ];
+                let time = 0;
+                notes.forEach(n => {
+                    playTone(n.f, n.d, 'square', time);
+                    time += n.d + 15;
+                });
+                setLedColor('green');
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 100);
+            } else if (song === 'pacman') {
+                setFace('happy');
+                const notes = [
+                    {f: 494, d: 130}, {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 130},
+                    {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 180},
+                    {f: 523, d: 130}, {f: 1046, d: 130}, {f: 784, d: 130}, {f: 659, d: 130},
+                    {f: 1046, d: 130}, {f: 784, d: 130}, {f: 659, d: 180},
+                    {f: 494, d: 130}, {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 130},
+                    {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 180},
+                    {f: 622, d: 80}, {f: 659, d: 80}, {f: 698, d: 80}, {f: 698, d: 80},
+                    {f: 740, d: 80}, {f: 784, d: 80}, {f: 830, d: 80}, {f: 880, d: 80},
+                    {f: 988, d: 300}, {f: 0, d: 140},
+                    {f: 494, d: 130}, {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 130},
+                    {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 180},
+                    {f: 523, d: 130}, {f: 1046, d: 130}, {f: 784, d: 130}, {f: 659, d: 130},
+                    {f: 1046, d: 130}, {f: 784, d: 130}, {f: 659, d: 180},
+                    {f: 494, d: 130}, {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 130},
+                    {f: 988, d: 130}, {f: 740, d: 130}, {f: 622, d: 180},
+                    {f: 622, d: 80}, {f: 659, d: 80}, {f: 698, d: 80}, {f: 740, d: 80},
+                    {f: 784, d: 80}, {f: 830, d: 80}, {f: 880, d: 80}, {f: 988, d: 450}
+                ];
+                let time = 0;
+                notes.forEach((n, idx) => {
+                    if (n.f > 0) {
+                        playTone(n.f, n.d, 'square', time);
+                        setTimeout(() => setLedColor(idx % 2 === 0 ? 'yellow' : 'red'), time);
+                    }
+                    time += n.d + 20;
+                });
+                startSongVisual('pacman', 'PAC-MAN ARCADE 1980', time);
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 200);
+            } else if (song === 'topgun') {
+                setFace('focus');
+                const notes = [
+                    {f: 261, d: 150}, {f: 261, d: 150}, {f: 311, d: 200}, {f: 349, d: 200},
+                    {f: 392, d: 250}, {f: 349, d: 150}, {f: 311, d: 200}, {f: 261, d: 300}, {f: 0, d: 100},
+                    {f: 261, d: 150}, {f: 261, d: 150}, {f: 311, d: 200}, {f: 349, d: 200},
+                    {f: 466, d: 300}, {f: 392, d: 350}, {f: 0, d: 150},
+                    {f: 392, d: 250}, {f: 466, d: 250}, {f: 523, d: 400}, {f: 466, d: 250},
+                    {f: 392, d: 250}, {f: 349, d: 250}, {f: 311, d: 250}, {f: 261, d: 500}, {f: 0, d: 150},
+                    {f: 392, d: 250}, {f: 466, d: 250}, {f: 523, d: 400}, {f: 466, d: 250},
+                    {f: 523, d: 300}, {f: 587, d: 300}, {f: 622, d: 600}, {f: 0, d: 150},
+                    {f: 261, d: 250}, {f: 392, d: 250}, {f: 349, d: 200}, {f: 392, d: 500},
+                    {f: 587, d: 300}, {f: 523, d: 300}, {f: 392, d: 500},
+                    {f: 349, d: 250}, {f: 392, d: 250}, {f: 466, d: 300}, {f: 523, d: 750}
+                ];
+                let time = 0;
+                notes.forEach((n, idx) => {
+                    if (n.f > 0) {
+                        playTone(n.f, n.d, 'sawtooth', time);
+                        setTimeout(() => setLedColor(idx % 2 === 0 ? 'red' : 'blue'), time);
+                    }
+                    time += n.d + 25;
+                });
+                startSongVisual('topgun', 'TOP GUN: DANGER ZONE', time);
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 200);
+            } else if (song === 'space') {
+                setFace('focus');
+                const notes = [
+                    {f: 261, d: 120}, {f: 196, d: 120}, {f: 164, d: 120}, {f: 130, d: 180},
+                    {f: 146, d: 120}, {f: 220, d: 120}, {f: 174, d: 120}, {f: 146, d: 180},
+                    {f: 164, d: 120}, {f: 246, d: 120}, {f: 196, d: 120}, {f: 164, d: 180},
+                    {f: 174, d: 120}, {f: 261, d: 120}, {f: 220, d: 120}, {f: 174, d: 180},
+                    {f: 440, d: 110}, {f: 329, d: 110}, {f: 440, d: 110}, {f: 523, d: 160},
+                    {f: 493, d: 110}, {f: 392, d: 110}, {f: 493, d: 110}, {f: 587, d: 160},
+                    {f: 523, d: 110}, {f: 440, d: 110}, {f: 659, d: 220}, {f: 587, d: 160}, {f: 523, d: 160},
+                    {f: 493, d: 160}, {f: 440, d: 160}, {f: 415, d: 220}, {f: 329, d: 280},
+                    {f: 440, d: 120}, {f: 523, d: 120}, {f: 659, d: 150}, {f: 880, d: 350},
+                    {f: 784, d: 120}, {f: 659, d: 120}, {f: 784, d: 150}, {f: 659, d: 350},
+                    {f: 523, d: 120}, {f: 587, d: 120}, {f: 659, d: 120}, {f: 587, d: 120},
+                    {f: 523, d: 200}, {f: 493, d: 200}, {f: 440, d: 650}
+                ];
+                let time = 0;
+                notes.forEach((n, idx) => {
+                    if (n.f > 0) {
+                        playTone(n.f, n.d, 'square', time);
+                        setTimeout(() => setLedColor(idx % 2 === 0 ? 'green' : 'cyan'), time);
+                    }
+                    time += n.d + 20;
+                });
+                startSongVisual('space', 'SPACE INVADERS ARCADE', time);
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 200);
+            } else if (song === 'takeonme') {
+                setFace('happy');
+                const notes = [
+                    {f: 370, d: 150}, {f: 370, d: 150}, {f: 293, d: 150}, {f: 246, d: 150}, {f: 0, d: 120},
+                    {f: 246, d: 150}, {f: 0, d: 120}, {f: 329, d: 150}, {f: 0, d: 120},
+                    {f: 329, d: 150}, {f: 0, d: 120}, {f: 329, d: 150}, {f: 415, d: 150},
+                    {f: 415, d: 150}, {f: 440, d: 150}, {f: 493, d: 150},
+                    {f: 440, d: 150}, {f: 440, d: 150}, {f: 440, d: 150}, {f: 329, d: 150}, {f: 0, d: 120},
+                    {f: 293, d: 150}, {f: 0, d: 120}, {f: 370, d: 150}, {f: 0, d: 120},
+                    {f: 370, d: 150}, {f: 0, d: 120}, {f: 370, d: 150}, {f: 329, d: 150},
+                    {f: 329, d: 150}, {f: 370, d: 150}, {f: 329, d: 280},
+                    {f: 370, d: 150}, {f: 370, d: 150}, {f: 293, d: 150}, {f: 246, d: 150}, {f: 0, d: 120},
+                    {f: 246, d: 150}, {f: 0, d: 120}, {f: 329, d: 150}, {f: 0, d: 120},
+                    {f: 329, d: 150}, {f: 0, d: 120}, {f: 329, d: 150}, {f: 415, d: 150},
+                    {f: 415, d: 150}, {f: 440, d: 150}, {f: 493, d: 150},
+                    {f: 440, d: 150}, {f: 440, d: 150}, {f: 440, d: 150}, {f: 329, d: 150}, {f: 0, d: 120},
+                    {f: 293, d: 150}, {f: 0, d: 120}, {f: 370, d: 150}, {f: 0, d: 120},
+                    {f: 370, d: 150}, {f: 0, d: 120}, {f: 370, d: 150}, {f: 329, d: 150},
+                    {f: 329, d: 150}, {f: 370, d: 150}, {f: 329, d: 500}
+                ];
+                let time = 0;
+                notes.forEach((n, idx) => {
+                    if (n.f > 0) {
+                        playTone(n.f, n.d, 'sawtooth', time);
+                        setTimeout(() => setLedColor(idx % 2 === 0 ? 'purple' : 'yellow'), time);
+                    }
+                    time += n.d + 20;
+                });
+                startSongVisual('takeonme', 'A-HA: TAKE ON ME 1985', time);
+                setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 200);
+            }
             } else if (song === 'sadBeep') {
                 playTone(440, 160, 'sawtooth', 0);
                 playTone(370, 260, 'sawtooth', 160);

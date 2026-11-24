@@ -297,6 +297,238 @@ inline void drawSennaScene(int step, Adafruit_SSD1306 &disp) {
 }
 
 // -------------------------------------------------------------
+// Sprites do Pac-Man 16x16 e Fantasma Blinky 16x16
+// -------------------------------------------------------------
+const unsigned char PROGMEM PACMAN_OPEN_16x16[] = {
+    0x07, 0xe0, 0x1f, 0xf8, 0x3f, 0xfc, 0x7f, 0xfe,
+    0x7f, 0xfe, 0xff, 0xff, 0xff, 0xf8, 0xff, 0xe0,
+    0xff, 0xe0, 0xff, 0xf8, 0xff, 0xff, 0x7f, 0xfe,
+    0x7f, 0xfe, 0x3f, 0xfc, 0x1f, 0xf8, 0x07, 0xe0
+};
+
+const unsigned char PROGMEM PACMAN_CLOSED_16x16[] = {
+    0x07, 0xe0, 0x1f, 0xf8, 0x3f, 0xfc, 0x7f, 0xfe,
+    0x7f, 0xfe, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xfe,
+    0x7f, 0xfe, 0x3f, 0xfc, 0x1f, 0xf8, 0x07, 0xe0
+};
+
+const unsigned char PROGMEM GHOST_BLINKY_16x16[] = {
+    0x07, 0xe0, 0x1f, 0xf8, 0x3f, 0xfc, 0x79, 0x9e,
+    0x71, 0x8e, 0xf9, 0x9f, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    0xff, 0xff, 0xdb, 0xdb, 0xd9, 0x9b, 0x81, 0x81
+};
+
+// -------------------------------------------------------------
+// Renderizador Especial: PAC-MAN Arcade 1980 no OLED
+// -------------------------------------------------------------
+inline void drawPacmanScene(int step, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Labirinto / Bordas azuis estilo arcade
+    disp.drawFastHLine(0, 0, 128, SSD1306_WHITE);
+    disp.drawFastHLine(0, 2, 128, SSD1306_WHITE);
+    disp.drawFastHLine(0, 61, 128, SSD1306_WHITE);
+    disp.drawFastHLine(0, 63, 128, SSD1306_WHITE);
+
+    // Header Arcade
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(6, 6);
+    disp.print("PAC-MAN");
+    disp.setCursor(76, 6);
+    disp.printf("PTS %04d", (step * 50) % 9990);
+
+    // Bolinhas de comida do Pac-Man (Dots)
+    for (int dx = 6; dx < 124; dx += 12) {
+        disp.fillRect(dx, 33, 2, 2, SSD1306_WHITE);
+    }
+    // Pílula Energizadora maior
+    disp.fillCircle(116, 34, 3, SSD1306_WHITE);
+
+    // Posição de deslocamento do Pac-Man (da esquerda para a direita)
+    int pacX = (step * 6) % 160 - 20;
+    bool openMouth = (step % 2 == 0);
+    disp.drawBitmap(pacX, 26, openMouth ? PACMAN_OPEN_16x16 : PACMAN_CLOSED_16x16, 16, 16, SSD1306_WHITE);
+
+    // Fantasma Blinky perseguindo
+    int ghostX = pacX - 24;
+    if (ghostX > -16 && ghostX < 128) {
+        disp.drawBitmap(ghostX, 26, GHOST_BLINKY_16x16, 16, 16, SSD1306_WHITE);
+    }
+
+    // Efeito WAKKA WAKKA no rodapé
+    disp.setCursor(40, 48);
+    disp.print(openMouth ? "WAKKA!" : "WAKKA~");
+
+    disp.display();
+}
+
+// -------------------------------------------------------------
+// Sprites do Top Gun: Caça F-14 Tomcat 32x14
+// -------------------------------------------------------------
+const unsigned char PROGMEM F14_JET_32x14[] = {
+    0x00, 0x01, 0x80, 0x00,
+    0x00, 0x03, 0xc0, 0x00,
+    0x00, 0x07, 0xe0, 0x00,
+    0x00, 0x0f, 0xf0, 0x00,
+    0x00, 0x1f, 0xf8, 0x00,
+    0x00, 0x7f, 0xfe, 0x00,
+    0x01, 0xff, 0xff, 0x80,
+    0x0f, 0xff, 0xff, 0xf0,
+    0x7f, 0xff, 0xff, 0xfe,
+    0xff, 0xff, 0xff, 0xff,
+    0x1f, 0x87, 0xe1, 0xf8,
+    0x07, 0x03, 0xc0, 0xe0,
+    0x0e, 0x01, 0x80, 0x70,
+    0x0c, 0x00, 0x00, 0x30
+};
+
+// -------------------------------------------------------------
+// Renderizador Especial: Top Gun (Danger Zone) no OLED
+// -------------------------------------------------------------
+inline void drawTopGunScene(int step, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Linhas de velocidade supersônica no horizonte
+    for (int y = 8; y < 60; y += 14) {
+        int xOffset = (step * 14 + y * 5) % 128;
+        disp.drawFastHLine(xOffset, y, 24, SSD1306_WHITE);
+    }
+
+    // Logo Anos 80 "TOP GUN"
+    disp.setTextSize(2);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(18, 4);
+    disp.print("TOP GUN");
+
+    disp.setTextSize(1);
+    disp.setCursor(14, 22);
+    disp.print(">> DANGER ZONE <<");
+
+    // Caça F-14 Tomcat cortando o céu
+    int jetX = 46 + (int)(sin((float)step * 0.4f) * 14.0f);
+    int jetY = 36 + (int)(cos((float)step * 0.3f) * 4.0f);
+    disp.drawBitmap(jetX, jetY, F14_JET_32x14, 32, 14, SSD1306_WHITE);
+
+    // Fogo da pós-combustão (Afterburner exhaust)
+    int exhaustLen = (step % 3 == 0) ? 14 : ((step % 3 == 1) ? 10 : 16);
+    disp.drawLine(jetX + 10, jetY + 14, jetX + 10 - exhaustLen / 2, jetY + 14 + exhaustLen, SSD1306_WHITE);
+    disp.drawLine(jetX + 21, jetY + 14, jetX + 21 + exhaustLen / 2, jetY + 14 + exhaustLen, SSD1306_WHITE);
+
+    // Indicador de velocidade Mach no rodapé
+    disp.setCursor(4, 54);
+    disp.printf("MACH 2.%d", (step % 9) + 1);
+    disp.setCursor(82, 54);
+    disp.print("US NAVY");
+
+    disp.display();
+}
+
+// -------------------------------------------------------------
+// Sprites de Space Invaders 16x12 e Canhão Espacial 16x8
+// -------------------------------------------------------------
+const unsigned char PROGMEM INVADER_CRAB_16x12[] = {
+    0x00, 0x00, 0x06, 0x60, 0x02, 0x40, 0x0f, 0xf0,
+    0x1b, 0xd8, 0x3f, 0xfc, 0x30, 0x0c, 0x3f, 0xfc,
+    0x35, 0xac, 0x10, 0x08, 0x1b, 0xd8, 0x06, 0x60
+};
+
+const unsigned char PROGMEM SPACE_CANNON_16x8[] = {
+    0x01, 0x80, 0x01, 0x80, 0x07, 0xe0, 0x07, 0xe0,
+    0x1f, 0xf8, 0x3f, 0xfc, 0x7f, 0xfe, 0x7f, 0xfe
+};
+
+// -------------------------------------------------------------
+// Renderizador Especial: Arcade Space / Space Invaders no OLED
+// -------------------------------------------------------------
+inline void drawArcadeSpaceScene(int step, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Placar Arcade clássico
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(4, 2);
+    disp.print("SCORE<1>");
+    disp.setCursor(68, 2);
+    disp.printf("%05d", step * 110);
+
+    // Estrelas piscando no espaço profundo
+    for (int s = 0; s < 12; s++) {
+        int sx = (s * 29 + step * 3) % 126 + 1;
+        int sy = (s * 17) % 40 + 12;
+        disp.drawPixel(sx, sy, SSD1306_WHITE);
+    }
+
+    // Alien Invader oscilando e descendo
+    int alienX = 14 + (step * 4) % 94;
+    int alienY = 14 + ((step / 10) % 3) * 6;
+    disp.drawBitmap(alienX, alienY, INVADER_CRAB_16x12, 16, 12, SSD1306_WHITE);
+
+    // Canhão de Defesa Terrestre
+    int shipX = 56 + (int)(sin((float)step * 0.5f) * 26.0f);
+    disp.drawBitmap(shipX, 54, SPACE_CANNON_16x8, 16, 8, SSD1306_WHITE);
+
+    // Disparos de laser subindo em direção ao alien
+    int laserY = 50 - ((step * 6) % 38);
+    disp.drawFastVLine(shipX + 7, laserY, 5, SSD1306_WHITE);
+    disp.drawFastVLine(shipX + 8, laserY, 5, SSD1306_WHITE);
+
+    // Bunkers de proteção
+    disp.fillRect(20, 48, 8, 4, SSD1306_WHITE);
+    disp.fillRect(98, 48, 8, 4, SSD1306_WHITE);
+
+    disp.display();
+}
+
+// -------------------------------------------------------------
+// Renderizador Especial: Anos 80 / Take On Me (Synthwave Grid)
+// -------------------------------------------------------------
+inline void drawTakeOnMeScene(int step, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Sol Retrô Synthwave com listras horizontais
+    int sunX = 64;
+    int sunY = 22;
+    int sunR = 14;
+    disp.drawCircle(sunX, sunY, sunR, SSD1306_WHITE);
+    disp.drawCircle(sunX, sunY, sunR - 1, SSD1306_WHITE);
+    for (int y = sunY - sunR + 3; y <= sunY + sunR - 3; y += 4) {
+        disp.drawFastHLine(sunX - sunR + 2, y, sunR * 2 - 4, SSD1306_BLACK);
+    }
+
+    // Linha do horizonte
+    disp.drawFastHLine(0, 36, 128, SSD1306_WHITE);
+
+    // Grade de perspectiva 3D (Wireframe Grid anos 80)
+    for (int x = 0; x <= 128; x += 16) {
+        disp.drawLine(x, 63, 64 + (x - 64) / 4, 36, SSD1306_WHITE);
+    }
+    int gridScroll = (step * 3) % 8;
+    for (int gy = 37 + gridScroll; gy < 64; gy += 7) {
+        disp.drawFastHLine(0, gy, 128, SSD1306_WHITE);
+    }
+
+    // Tipografia Synthwave Anos 80
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(4, 4);
+    disp.print("A-HA 1985");
+    disp.setCursor(68, 4);
+    disp.print("TAKE ON ME");
+
+    // Equalizador 8-Bits animado nos cantos superiores
+    for (int b = 0; b < 5; b++) {
+        int h = (abs((step + b * 2) % 10 - 5) + 2) * 2;
+        disp.fillRect(4 + b * 4, 32 - h, 3, h, SSD1306_WHITE);
+        disp.fillRect(104 + b * 4, 32 - h, 3, h, SSD1306_WHITE);
+    }
+
+    disp.display();
+}
+
+// -------------------------------------------------------------
 // Barra de Status Superior do OLED: Sinal de Wi-Fi e Hora
 // -------------------------------------------------------------
 inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr) {

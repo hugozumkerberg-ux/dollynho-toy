@@ -132,4 +132,109 @@ const Note PROGMEM SONG_SENNA_VITORIA[] = {
 };
 const int LEN_SENNA_VITORIA = sizeof(SONG_SENNA_VITORIA) / sizeof(Note);
 
+// -------------------------------------------------------------
+// 6. PAC-MAN (ARCADE 1980 - TEMA CLÁSSICO DE ABERTURA)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_PACMAN_FULL[] = {
+    // Frase A
+    {NOTE_B4, 130}, {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 130},
+    {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 180},
+    {NOTE_C5, 130}, {NOTE_C6, 130}, {NOTE_G5, 130}, {NOTE_E5, 130},
+    {NOTE_C6, 130}, {NOTE_G5, 130}, {NOTE_E5, 180},
+    {NOTE_B4, 130}, {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 130},
+    {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 180},
+    {NOTE_DS5, 80}, {NOTE_E5, 80}, {NOTE_F5, 80}, {NOTE_F5, 80},
+    {NOTE_FS5, 80}, {NOTE_G5, 80}, {NOTE_GS5, 80}, {NOTE_A5, 80},
+    {NOTE_B5, 300}, {REST, 140},
+
+    // Frase B (Repetição staccato)
+    {NOTE_B4, 130}, {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 130},
+    {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 180},
+    {NOTE_C5, 130}, {NOTE_C6, 130}, {NOTE_G5, 130}, {NOTE_E5, 130},
+    {NOTE_C6, 130}, {NOTE_G5, 130}, {NOTE_E5, 180},
+    {NOTE_B4, 130}, {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 130},
+    {NOTE_B5, 130}, {NOTE_FS5, 130}, {NOTE_DS5, 180},
+    {NOTE_DS5, 80}, {NOTE_E5, 80}, {NOTE_F5, 80}, {NOTE_FS5, 80},
+    {NOTE_G5, 80}, {NOTE_GS5, 80}, {NOTE_A5, 80}, {NOTE_B5, 450}
+};
+const int LEN_PACMAN_FULL = sizeof(SONG_PACMAN_FULL) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 7. TOP GUN: DANGER ZONE & ANTHEM (KENNY LOGGINS 1986)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_TOP_GUN[] = {
+    // Intro Riff Enérgico
+    {NOTE_C4, 150}, {NOTE_C4, 150}, {NOTE_DS4, 200}, {NOTE_F4, 200},
+    {NOTE_G4, 250}, {NOTE_F4, 150}, {NOTE_DS4, 200}, {NOTE_C4, 300}, {REST, 100},
+    {NOTE_C4, 150}, {NOTE_C4, 150}, {NOTE_DS4, 200}, {NOTE_F4, 200},
+    {NOTE_AS4, 300}, {NOTE_G4, 350}, {REST, 150},
+
+    // Refrão Épico: "Highway to the Danger Zone!"
+    {NOTE_G4, 250}, {NOTE_AS4, 250}, {NOTE_C5, 400}, {NOTE_AS4, 250},
+    {NOTE_G4, 250}, {NOTE_F4, 250}, {NOTE_DS4, 250}, {NOTE_C4, 500}, {REST, 150},
+
+    // "Ride into the Danger Zone!"
+    {NOTE_G4, 250}, {NOTE_AS4, 250}, {NOTE_C5, 400}, {NOTE_AS4, 250},
+    {NOTE_C5, 300}, {NOTE_D5, 300}, {NOTE_DS5, 600}, {REST, 150},
+
+    // Solo Top Gun Anthem (Harold Faltermeyer)
+    {NOTE_C4, 250}, {NOTE_G4, 250}, {NOTE_F4, 200}, {NOTE_G4, 500},
+    {NOTE_D5, 300}, {NOTE_C5, 300}, {NOTE_G4, 500},
+    {NOTE_F4, 250}, {NOTE_G4, 250}, {NOTE_AS4, 300}, {NOTE_C5, 750}
+};
+const int LEN_TOP_GUN = sizeof(SONG_TOP_GUN) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 8. SPACE ARCADE / SPACE INVADERS & GALAGA (ARCADE ESCAPE 1980)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_ARCADE_SPACE[] = {
+    // Fanfarra Galaga Clássica
+    {NOTE_C4, 120}, {NOTE_G3, 120}, {NOTE_E3, 120}, {NOTE_C3, 180},
+    {NOTE_D3, 120}, {NOTE_A3, 120}, {NOTE_F3, 120}, {NOTE_D3, 180},
+    {NOTE_E3, 120}, {NOTE_B3, 120}, {NOTE_G3, 120}, {NOTE_E3, 180},
+    {NOTE_F3, 120}, {NOTE_C4, 120}, {NOTE_A3, 120}, {NOTE_F3, 180},
+
+    // Batalha Space Invaders Acelerando
+    {NOTE_A4, 110}, {NOTE_E4, 110}, {NOTE_A4, 110}, {NOTE_C5, 160},
+    {NOTE_B4, 110}, {NOTE_G4, 110}, {NOTE_B4, 110}, {NOTE_D5, 160},
+    {NOTE_C5, 110}, {NOTE_A4, 110}, {NOTE_E5, 220}, {NOTE_D5, 160}, {NOTE_C5, 160},
+    {NOTE_B4, 160}, {NOTE_A4, 160}, {NOTE_GS4, 220}, {NOTE_E4, 280},
+
+    // Fanfarra Vitória Arcade 8-Bit
+    {NOTE_A4, 120}, {NOTE_C5, 120}, {NOTE_E5, 150}, {NOTE_A5, 350},
+    {NOTE_G5, 120}, {NOTE_E5, 120}, {NOTE_G5, 150}, {NOTE_E5, 350},
+    {NOTE_C5, 120}, {NOTE_D5, 120}, {NOTE_E5, 120}, {NOTE_D5, 120},
+    {NOTE_C5, 200}, {NOTE_B4, 200}, {NOTE_A4, 650}
+};
+const int LEN_ARCADE_SPACE = sizeof(SONG_ARCADE_SPACE) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 9. ANOS 80: TAKE ON ME (A-HA 1985 SYNTH-POP)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_TAKE_ON_ME[] = {
+    // Frase 1 do Teclado Sintetizador
+    {NOTE_FS4, 150}, {NOTE_FS4, 150}, {NOTE_D4, 150}, {NOTE_B3, 150}, {REST, 120},
+    {NOTE_B3, 150}, {REST, 120}, {NOTE_E4, 150}, {REST, 120},
+    {NOTE_E4, 150}, {REST, 120}, {NOTE_E4, 150}, {NOTE_GS4, 150},
+    {NOTE_GS4, 150}, {NOTE_A4, 150}, {NOTE_B4, 150},
+
+    // Frase 2
+    {NOTE_A4, 150}, {NOTE_A4, 150}, {NOTE_A4, 150}, {NOTE_E4, 150}, {REST, 120},
+    {NOTE_D4, 150}, {REST, 120}, {NOTE_FS4, 150}, {REST, 120},
+    {NOTE_FS4, 150}, {REST, 120}, {NOTE_FS4, 150}, {NOTE_E4, 150},
+    {NOTE_E4, 150}, {NOTE_FS4, 150}, {NOTE_E4, 280},
+
+    // Frase 3 com tom agudo clássico
+    {NOTE_FS4, 150}, {NOTE_FS4, 150}, {NOTE_D4, 150}, {NOTE_B3, 150}, {REST, 120},
+    {NOTE_B3, 150}, {REST, 120}, {NOTE_E4, 150}, {REST, 120},
+    {NOTE_E4, 150}, {REST, 120}, {NOTE_E4, 150}, {NOTE_GS4, 150},
+    {NOTE_GS4, 150}, {NOTE_A4, 150}, {NOTE_B4, 150},
+
+    {NOTE_A4, 150}, {NOTE_A4, 150}, {NOTE_A4, 150}, {NOTE_E4, 150}, {REST, 120},
+    {NOTE_D4, 150}, {REST, 120}, {NOTE_FS4, 150}, {REST, 120},
+    {NOTE_FS4, 150}, {REST, 120}, {NOTE_FS4, 150}, {NOTE_E4, 150},
+    {NOTE_E4, 150}, {NOTE_FS4, 150}, {NOTE_E4, 500}
+};
+const int LEN_TAKE_ON_ME = sizeof(SONG_TAKE_ON_ME) / sizeof(Note);
+
 #endif // SONGS_8BIT_H
