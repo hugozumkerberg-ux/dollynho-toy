@@ -529,47 +529,84 @@ inline void drawTakeOnMeScene(int step, Adafruit_SSD1306 &disp) {
 }
 
 // -------------------------------------------------------------
-// Barra de Status Superior do OLED: Sinal de Wi-Fi e Hora
+// Barra de Status Superior do OLED: Medidor de Sinal Wi-Fi, Letreiro Rolante e Relógio
 // -------------------------------------------------------------
-inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr) {
-    // Faixa superior de 11 pixels para a barra
-    disp.fillRect(0, 0, 128, 11, SSD1306_BLACK);
-
-    // 1. Ícone do Wi-Fi (Barras de intensidade de sinal)
-    int bars = 1;
-    if (isWifiConnected) {
-        if (rssi >= -60) bars = 4;
-        else if (rssi >= -70) bars = 3;
-        else if (rssi >= -80) bars = 2;
-        else bars = 1;
-    } else {
-        bars = 0; // Desconectado / Modo AP
-    }
-
-    // Desenha as 4 barras de sinal
-    disp.fillRect(2, 7, 2, 3, (bars >= 1) ? SSD1306_WHITE : SSD1306_BLACK);
-    if (bars < 1) disp.drawPixel(2, 9, SSD1306_WHITE);
-    disp.fillRect(5, 5, 2, 5, (bars >= 2) ? SSD1306_WHITE : SSD1306_BLACK);
-    disp.fillRect(8, 3, 2, 7, (bars >= 3) ? SSD1306_WHITE : SSD1306_BLACK);
-    disp.fillRect(11, 1, 2, 9, (bars >= 4) ? SSD1306_WHITE : SSD1306_BLACK);
-
-    // Texto de status do Wi-Fi ao lado do ícone
+inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr, const char* marqueeText = nullptr) {
+    disp.setTextWrap(false);
     disp.setTextSize(1);
     disp.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-    disp.setCursor(16, 2);
-    if (isWifiConnected) {
-        disp.print("WiFi");
-    } else {
-        disp.print("AP");
+
+    // 1. Limpa a faixa superior de 12 pixels para a barra de status
+    disp.fillRect(0, 0, 128, 12, SSD1306_BLACK);
+
+    // 2. Título / Letreiro Rolante no Topo (Pixel-by-pixel Marquee)
+    const char* textToScroll = (marqueeText && strlen(marqueeText) > 0) ? marqueeText : "DOLLYNHO TOY * WI-FI ATIVO * DUAL BUZZER * ";
+    int textLen = strlen(textToScroll);
+    int textPixelWidth = textLen * 6; // 6 pixels por caractere (5x7 + 1px espaçamento)
+    int loopWidth = textPixelWidth + 30; // espaço de respiro entre repetições
+
+    static unsigned long lastScrollTime = 0;
+    static int scrollOffset = 0;
+    unsigned long now = millis();
+    if (now - lastScrollTime >= 45) { // Desloca 1 pixel a cada 45ms (rolagem suave e nítida)
+        lastScrollTime = now;
+        scrollOffset = (scrollOffset + 1) % loopWidth;
     }
 
-    // 2. Hora no canto direito (ex: "04:55" ou "12:30")
+    // Desenha o texto rolante na faixa intermediária
+    int startX = 16 - scrollOffset;
+    disp.setCursor(startX, 2);
+    disp.print(textToScroll);
+    if (startX + textPixelWidth < 96) {
+        disp.setCursor(startX + loopWidth, 2);
+        disp.print(textToScroll);
+    }
+
+    // 3. Máscara de Recorte à Esquerda (x: 0 a 15) para limpar texto que rolou sob o Wi-Fi
+    disp.fillRect(0, 0, 16, 11, SSD1306_BLACK);
+
+    // 4. Medidor de Sinal Wi-Fi com Qualidade (Escadinha de 4 Barras de Precisão)
+    int bars = 0;
+    if (isWifiConnected) {
+        if (rssi >= -55) bars = 4;       // Sinal Excelente (100%)
+        else if (rssi >= -68) bars = 3;  // Sinal Bom (75%)
+        else if (rssi >= -78) bars = 2;  // Sinal Médio (50%)
+        else bars = 1;                   // Sinal Fraco (25%)
+    }
+
+    if (!isWifiConnected) {
+        // Ícone de Desconectado: 'X' de alerta no medidor Wi-Fi
+        disp.drawLine(2, 3, 11, 9, SSD1306_WHITE);
+        disp.drawLine(2, 9, 11, 3, SSD1306_WHITE);
+        disp.drawPixel(13, 9, SSD1306_WHITE); // ponto de atenção
+    } else {
+        // Barra 1 (3px de altura): x=2..3, y=8..10
+        if (bars >= 1) disp.fillRect(2, 8, 2, 3, SSD1306_WHITE);
+        else disp.drawPixel(2, 10, SSD1306_WHITE);
+
+        // Barra 2 (5px de altura): x=5..6, y=6..10
+        if (bars >= 2) disp.fillRect(5, 6, 2, 5, SSD1306_WHITE);
+        else disp.drawPixel(5, 10, SSD1306_WHITE);
+
+        // Barra 3 (7px de altura): x=8..9, y=4..10
+        if (bars >= 3) disp.fillRect(8, 4, 2, 7, SSD1306_WHITE);
+        else disp.drawPixel(8, 10, SSD1306_WHITE);
+
+        // Barra 4 (9px de altura): x=11..12, y=2..10
+        if (bars >= 4) disp.fillRect(11, 2, 2, 9, SSD1306_WHITE);
+        else disp.drawPixel(11, 10, SSD1306_WHITE);
+    }
+
+    // 5. Máscara de Recorte à Direita (x: 96 a 127) para limpar texto antes do relógio
+    disp.fillRect(96, 0, 32, 11, SSD1306_BLACK);
+
+    // 6. Relógio Digital HH:MM no canto superior direito
     if (timeStr && strlen(timeStr) > 0) {
-        disp.setCursor(96, 2);
+        disp.setCursor(98, 2);
         disp.print(timeStr);
     }
 
-    // 3. Linha divisória pontilhada sutil separando a barra dos olhos
+    // 7. Linha divisória pontilhada sutil na base da barra (y = 11)
     for (int x = 0; x < 128; x += 3) {
         disp.drawPixel(x, 11, SSD1306_WHITE);
     }

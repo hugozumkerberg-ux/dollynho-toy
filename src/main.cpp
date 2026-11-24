@@ -67,6 +67,7 @@ unsigned long lastStockCheckTime = 0;
 char manualTimeStr[10] = "";
 bool hasManualTime = false;
 unsigned long lastStatusBarTime = 0;
+char currentMarqueeTitle[128] = "DOLLYNHO TOY * WI-FI ON * BBAS3 R$ 28.45 * DUAL BUZZER * ";
 
 const char* getTimeString() {
     static char buf[10] = "12:00";
@@ -612,7 +613,22 @@ void executeRobotCommand(String cmd) {
 
     Serial.println("[Dollynho] Processando comando: " + cmd);
 
-    if (cmd.startsWith("time:")) {
+    if (cmd.startsWith("title:") || cmd.startsWith("titulo:") || cmd.startsWith("letreiro:")) {
+        int colon = cmd.indexOf(':');
+        String t = cmd.substring(colon + 1);
+        t.trim();
+        if (t.length() > 0) {
+            strncpy(currentMarqueeTitle, t.c_str(), sizeof(currentMarqueeTitle) - 1);
+            currentMarqueeTitle[sizeof(currentMarqueeTitle) - 1] = '\0';
+            Serial.printf("[Letreiro OLED] Novo título configurado: %s\n", currentMarqueeTitle);
+            buzzerTone(NOTE_E6);
+            delay(50);
+            buzzerTone(NOTE_G6);
+            delay(70);
+            buzzerNoTone();
+        }
+    }
+    else if (cmd.startsWith("time:")) {
         String t = cmd.substring(5);
         t.trim();
         if (t.length() >= 5) {
@@ -828,7 +844,7 @@ void executeRobotCommand(String cmd) {
 // Roda em segundo plano no Core 0 sem nunca travar os olhos/FPS no Core 1!
 // ----------------------------------------------------
 static volatile bool pendingCloudCmd = false;
-static char cloudCmdBuffer[64] = "";
+static char cloudCmdBuffer[128] = "";
 static portMUX_TYPE cloudMux = portMUX_INITIALIZER_UNLOCKED;
 
 void cloudPollingTask(void* pvParameters) {
@@ -1058,7 +1074,7 @@ void setup() {
             cachedWifi = (WiFi.status() == WL_CONNECTED);
             if (cachedWifi) cachedRssi = WiFi.RSSI();
         }
-        drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString());
+        drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString(), currentMarqueeTitle);
     };
 
     // Inicia a tarefa de polling da nuvem no Core 0 (libera 100% o Core 1 para gráficos!)
@@ -1111,9 +1127,10 @@ void loop() {
 
     // Executa comando remoto recebido da nuvem pelo Core 0
     if (pendingCloudCmd) {
-        char cmdToRun[64];
+        char cmdToRun[128];
         portENTER_CRITICAL(&cloudMux);
-        strncpy(cmdToRun, cloudCmdBuffer, sizeof(cmdToRun));
+        strncpy(cmdToRun, cloudCmdBuffer, sizeof(cmdToRun) - 1);
+        cmdToRun[sizeof(cmdToRun) - 1] = '\0';
         pendingCloudCmd = false;
         portEXIT_CRITICAL(&cloudMux);
 

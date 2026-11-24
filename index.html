@@ -1190,6 +1190,37 @@
                 </div>
             </div>
 
+            <!-- Card 2: Letreiro Rolante no Topo do Robô (OLED Marquee) -->
+            <div class="card" style="grid-column: span 1;">
+                <div class="card-title">
+                    <span>📝 Letreiro Rolante no Topo (OLED)</span>
+                    <span style="font-size: 0.75rem; color: var(--accent-cyan);">Wi-Fi Live</span>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px;">
+                    Envie títulos, recados ou avisos para passar no letreiro do display OLED em tempo real:
+                </p>
+
+                <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                    <input type="text" id="marqueeTextInput" placeholder="Ex: DOLLYNHO TOY * PROJETO ATIVO *" maxlength="90"
+                           style="flex: 1; padding: 10px 14px; border-radius: 8px; background: #0f172a; border: 1px solid var(--card-border); color: #fff; font-family: monospace; font-size: 0.85rem;"
+                           onkeydown="if(event.key==='Enter') sendRobotMarquee()">
+                    <button onclick="sendRobotMarquee()" 
+                            style="padding: 10px 18px; border-radius: 8px; background: linear-gradient(135deg, #0284c7, #0369a1); border: 1px solid #38bdf8; color: #fff; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+                        <span>🚀</span> Enviar
+                    </button>
+                </div>
+
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; font-weight: bold;">Atalhos Rápidos:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('DOLLYNHO TOY * WI-FI ON * BBAS3 R$ 28.45 *')">🧃 Dollynho Padrão</button>
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('BEM-VINDO AO BAZAR DAS NOVIDADES *')">🛒 Bazar Novidades</button>
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('BBAS3 R$ 28.45 (+1.82%) ▲ ALTA NA B3 *')">📈 BBAS3 Alta</button>
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('SUPER MARIO BROS * DUAL BUZZER *')">🍄 Mario Bros</button>
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('AYRTON SENNA DO BRASIL * VITORIA *')">🏎️ Ayrton Senna</button>
+                    <button class="quick-cmd-btn" onclick="sendRobotMarquee('HORA DO CAFEZINHO! * DESCANSE UM POUCO *')">☕ Hora do Café</button>
+                </div>
+            </div>
+
             <!-- Card 3: "Me Ouça" - Reconhecimento de Voz Web Speech -->
             <div class="card">
                 <div class="card-title">
@@ -2203,6 +2234,23 @@
             drawOledStatusBar();
         }
 
+        let simMarqueeOffset = 0;
+        let simCurrentTitle = "DOLLYNHO TOY * WI-FI ON * BBAS3 R$ 28.45 * DUAL BUZZER * ";
+
+        function sendRobotMarquee(text) {
+            const input = document.getElementById('marqueeTextInput');
+            let txt = text || (input ? input.value.trim() : '');
+            if (!txt) txt = "DOLLYNHO TOY * WI-FI ON * ";
+            if (!txt.endsWith(' ')) txt += ' * ';
+            
+            simCurrentTitle = txt;
+            if (input && !text) input.value = '';
+            
+            sendEsp32Command('title:' + txt);
+            drawOled();
+            appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[LETREIRO] Título enviado ao display OLED: "${txt}"`, 'sent');
+        }
+
         function drawOledStatusBar() {
             ctx.save();
             ctx.shadowBlur = 0;
@@ -2210,24 +2258,55 @@
             ctx.fillStyle = '#050a14';
             ctx.fillRect(0, 0, 256, 22);
 
-            // 1. Ícone de Wi-Fi (4 barras estilo sinal)
+            // 1. Letreiro Rolante Animado (Faixa Central com Clipping de Canvas)
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(36, 0, 160, 22);
+            ctx.clip(); // Recorta para ficar perfeitamente contido entre o Wi-Fi e o Relógio!
+
             ctx.fillStyle = '#38bdf8';
-            ctx.fillRect(10, 14, 3, 4);
-            ctx.fillRect(15, 11, 3, 7);
-            ctx.fillRect(20, 8, 3, 10);
-            ctx.fillRect(25, 5, 3, 13);
-
-            // Texto "Wi-Fi"
             ctx.font = 'bold 11px Consolas, monospace';
-            ctx.fillText('Wi-Fi', 34, 15);
+            const charWidth = 7;
+            const textWidth = simCurrentTitle.length * charWidth;
+            const loopSpan = textWidth + 40;
 
-            // 2. Hora no canto superior direito
+            simMarqueeOffset = (simMarqueeOffset + 1.2) % loopSpan;
+            const startX = 36 - simMarqueeOffset;
+            ctx.fillText(simCurrentTitle, startX, 15);
+            if (startX + textWidth < 196) {
+                ctx.fillText(simCurrentTitle, startX + loopSpan, 15);
+            }
+            ctx.restore();
+
+            // 2. Medidor de Sinal Wi-Fi com Qualidade (Escadinha de 4 Barras)
+            const rssi = (window.lastEspRssi !== undefined) ? window.lastEspRssi : -62;
+            let bars = 3;
+            if (rssi >= -55) bars = 4;
+            else if (rssi >= -68) bars = 3;
+            else if (rssi >= -78) bars = 2;
+            else bars = 1;
+
+            // Barra 1 (4px)
+            ctx.fillStyle = (bars >= 1) ? '#22c55e' : '#334155';
+            ctx.fillRect(8, 14, 3, 5);
+            // Barra 2 (7px)
+            ctx.fillStyle = (bars >= 2) ? '#22c55e' : '#334155';
+            ctx.fillRect(13, 11, 3, 8);
+            // Barra 3 (10px)
+            ctx.fillStyle = (bars >= 3) ? '#38bdf8' : '#334155';
+            ctx.fillRect(18, 8, 3, 11);
+            // Barra 4 (13px)
+            ctx.fillStyle = (bars >= 4) ? '#38bdf8' : '#334155';
+            ctx.fillRect(23, 5, 3, 14);
+
+            // 3. Hora no canto superior direito
             const now = new Date();
             const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            ctx.fillStyle = '#f8fafc';
             ctx.font = 'bold 11px Consolas, monospace';
-            ctx.fillText(timeStr, 214, 15);
+            ctx.fillText(timeStr, 206, 15);
 
-            // 3. Linha divisória pontilhada sutil
+            // 4. Linha divisória pontilhada sutil
             ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -3953,12 +4032,12 @@
         checkEsp32Status();
         setInterval(checkEsp32Status, 3000);
 
-        // Atualiza relógio e barra superior a cada 1 segundo
+        // Animação suave e contínua do OLED (letreiro rolante superior e relógio)
         setInterval(() => {
             if (!songVisualInterval) {
                 drawOled();
             }
-        }, 1000);
+        }, 120);
     </script>
 
     <!-- Barra de Navegação Inferior Nativa Mobile (PWA Bottom Nav) -->
