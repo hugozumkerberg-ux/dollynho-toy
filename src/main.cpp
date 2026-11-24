@@ -868,6 +868,77 @@ void cloudPollingTask(void* pvParameters) {
     }
 }
 
+// ----------------------------------------------------
+// Gerenciador do Botão Físico Multifunção (GPIO 7 - INPUT_PULLUP)
+// Suporta: Clique Simples (Muda Expressão), Duplo Clique (Moeda Mario), Pressionar e Segurar (Próxima Música)
+// ----------------------------------------------------
+void handlePhysicalButton() {
+    static int lastButtonState = HIGH;
+    static unsigned long pressStartTime = 0;
+    static unsigned long lastReleaseTime = 0;
+    static int clickCount = 0;
+    static bool longPressTriggered = false;
+
+    int reading = digitalRead(PIN_BOTAO);
+    unsigned long now = millis();
+
+    // Transição de Solto para Pressionado (HIGH -> LOW)
+    if (reading == LOW && lastButtonState == HIGH) {
+        pressStartTime = now;
+        longPressTriggered = false;
+        buzzerTone1(NOTE_C6); // Bip tátil imediato no clique
+        delay(12);
+        buzzerNoTone1();
+    }
+
+    // Enquanto estiver pressionado: checa Long Press (> 1200ms)
+    if (reading == LOW && !longPressTriggered) {
+        if (now - pressStartTime > 1200) {
+            longPressTriggered = true;
+            clickCount = 0; // Cancela clique simples
+            Serial.println("[Botão Físico] 🔘 Pressionado e Segurado! Tocando Próxima Música...");
+            
+            // Cicla entre as músicas completas
+            static int songIndex = 0;
+            const char* songs[] = {"mario", "senna", "topgun", "pacman", "space", "takeonme", "tetris", "imperial"};
+            const int totalSongs = sizeof(songs) / sizeof(songs[0]);
+            
+            executeRobotCommand(String(songs[songIndex]));
+            songIndex = (songIndex + 1) % totalSongs;
+        }
+    }
+
+    // Transição de Pressionado para Solto (LOW -> HIGH)
+    if (reading == HIGH && lastButtonState == LOW) {
+        unsigned long duration = now - pressStartTime;
+        if (!longPressTriggered && duration >= 35) {
+            clickCount++;
+            lastReleaseTime = now;
+        }
+    }
+
+    // Avalia cliques após janela de espera de 280ms
+    if (clickCount > 0 && (now - lastReleaseTime > 280) && reading == HIGH) {
+        if (clickCount == 1) {
+            // Clique Curto Simples: Alterna ciclo de Expressões / Humores
+            Serial.println("[Botão Físico] 🔘 Clique Curto: Alternando Expressão...");
+            static int faceIndex = 0;
+            const char* faces[] = {"happy", "love", "surprised", "angry", "sleepy", "default"};
+            const int totalFaces = sizeof(faces) / sizeof(faces[0]);
+
+            faceIndex = (faceIndex + 1) % totalFaces;
+            executeRobotCommand(String(faces[faceIndex]));
+        } else if (clickCount >= 2) {
+            // Clique Duplo: Moeda do Mario + Acorde Duplo
+            Serial.println("[Botão Físico] 🔘🔘 Clique Duplo: +1 Moeda do Mario!");
+            notifyMarioCoin();
+        }
+        clickCount = 0;
+    }
+
+    lastButtonState = reading;
+}
+
 void setup() {
     Serial.begin(115200);
     Serial.setTxTimeoutMs(0); // Não bloqueia quando rodando sem cabo USB (carregador/bateria)
@@ -880,6 +951,7 @@ void setup() {
     pinMode(PIN_LED_AMARELO, OUTPUT);
     pinMode(PIN_LED_VERMELHO, OUTPUT);
     pinMode(PIN_POTENCIOMETRO, INPUT);
+    pinMode(PIN_BOTAO, INPUT_PULLUP); // Botão Físico Táctil no GPIO 7
 
     // Desliga IMEDIATAMENTE os LEDs da placa e externos
     ledsOff();
@@ -1027,6 +1099,9 @@ void loop() {
     } else {
         roboEyes.update();
     }
+
+    // Monitoramento do Botão Físico Multifunção (GPIO 7)
+    handlePhysicalButton();
 
     // Leitura do Monitor Serial / Web Serial USB
     if (Serial.available()) {

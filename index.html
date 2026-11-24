@@ -1395,6 +1395,7 @@
                 <button class="proto-filter-btn" onclick="filterCircuit('led_red', this)">🔴 LED Vermelho (GPIO 6)</button>
                 <button class="proto-filter-btn" onclick="filterCircuit('pot', this)">🎛️ Potenciômetro (GPIO 1)</button>
                 <button class="proto-filter-btn" onclick="filterCircuit('buzzer', this)">🔊 Buzzers Duplos (GPIO 15 & 16)</button>
+                <button class="proto-filter-btn" onclick="filterCircuit('button', this)">🔘 Botão Táctil (GPIO 7)</button>
             </div>
 
             <!-- Layout Duplo: Protoboard SVG à Esquerda | Painel de Inspeção & Checklist à Direita -->
@@ -1577,6 +1578,16 @@
                                 <text x="152" y="623" fill="#ef4444" font-size="8.5" font-family="monospace" font-weight="bold">LED Vermelho (L38-40)</text>
                             </g>
 
+                            <!-- 8. Botão Táctil Push Button (Linhas 44 a 46 Esquerda - GPIO 7) -->
+                            <g id="compButton" class="comp-hoverable" data-circuit="button" onclick="inspectComponent('button')">
+                                <!-- Base Metálica do Botão -->
+                                <rect x="95" y="685" width="45" height="40" rx="6" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+                                <!-- Botão Redondo Central -->
+                                <circle cx="117" cy="705" r="13" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>
+                                <circle cx="117" cy="705" r="8" fill="#38bdf8"/>
+                                <text x="72" y="740" fill="#38bdf8" font-size="8" font-family="monospace" font-weight="bold">Botão (GPIO 7)</text>
+                            </g>
+
                             <!-- 5. Potenciômetro 10k (Linhas 44 a 46) -->
                             <g id="compPot" class="comp-hoverable" data-circuit="pot" onclick="inspectComponent('pot')">
                                 <!-- Corpo Azul do Trimpot/Potenciômetro -->
@@ -1698,6 +1709,16 @@
                             <path class="jumper-wire" data-circuit="buzzer power" data-wire="buzzer2_gnd" onclick="inspectWire('buzzer2_gnd')"
                                 d="M 345 810 C 365 815, 385 815, 410 810"
                                 fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
+
+                            <!-- Circuito Botão: GPIO 7 (ESP32 L6 -> Linha 44 a) -->
+                            <path class="jumper-wire" data-circuit="button" data-wire="button_sig" onclick="inspectWire('button_sig')"
+                                d="M 175 120 C 75 180, 60 520, 95 690"
+                                fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+
+                            <!-- Circuito Botão: GND (Linha 46 a -> Trilho -) -->
+                            <path class="jumper-wire" data-circuit="button power" data-wire="button_gnd" onclick="inspectWire('button_gnd')"
+                                d="M 95 720 C 70 725, 50 725, 30 720"
+                                fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
                         </svg>
                     </div>
                 </div>
@@ -1783,6 +1804,12 @@
                                     <strong>Passo 8:</strong> <strong>Buzzer 2 (Linhas 50 a 52 Direita)</strong>: Positivo (+) no GPIO 16 e Negativo (-) no trilho GND (-) para áudio polifônico estéreo!
                                 </label>
                             </div>
+                            <div class="step-item" onclick="toggleStep(9)">
+                                <input type="checkbox" id="step9" class="step-check" onchange="updateStepProgress()">
+                                <label for="step9" class="step-label">
+                                    <strong>Passo 9:</strong> <strong>Botão Táctil (Linhas 44 a 46 Esquerda)</strong>: Terminal 1 no GPIO 7 e Terminal 2 no trilho GND (-) para controle físico!
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1841,6 +1868,15 @@
                             <div>• <strong>Buzzer 1 Positivo (+)</strong> ➔ <span class="pin-chip" style="background:#ea580c;">GPIO 15</span> (Melodia Principal)</div>
                             <div>• <strong>Buzzer 2 Positivo (+)</strong> ➔ <span class="pin-chip" style="background:#f59e0b;">GPIO 16</span> (Harmonia / Estéreo)</div>
                             <div>• <strong>Terminais Negativos (-)</strong> ➔ <span class="pin-chip" style="background:#0f172a;">Trilho GND (-)</span></div>
+                        </div>
+                    </div>
+                    <!-- Card Botão -->
+                    <div style="background: #1e293b; border-radius: 10px; padding: 16px; border-left: 6px solid #38bdf8;">
+                        <h4 style="font-size: 1.25rem; color: #38bdf8; margin-bottom: 10px;">🔘 5. BOTÃO TÁCTIL MULTIFUNÇÃO</h4>
+                        <div style="font-size: 1.15rem; line-height: 1.8;">
+                            <div>• <strong>Terminal 1 (Linha 44)</strong> ➔ <span class="pin-chip" style="background:#0284c7;">GPIO 7</span> (INPUT_PULLUP)</div>
+                            <div>• <strong>Terminal 2 (Linha 46)</strong> ➔ <span class="pin-chip" style="background:#0f172a;">Trilho GND (-)</span></div>
+                            <div>• <em>1 Clique = Muda Rosto • 2 Cliques = Moeda Mario • Segurar = Toca Música!</em></div>
                         </div>
                     </div>
                 </div>
@@ -1923,6 +1959,14 @@
                             <td>Positivo (+), Negativo (-)</td>
                             <td><span class="pin-chip">GPIO 16</span> e <span class="pin-chip">GND</span></td>
                             <td>Harmonia Polifônica, Acordes Duplos e Efeitos Estéreo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Botão Táctil Push Button</strong></td>
+                            <td>Linhas 44 a 46 (Esquerda)</td>
+                            <td><span class="wire-dot" style="background: #38bdf8;"></span>Ciano</td>
+                            <td>Terminal 1, Terminal 2</td>
+                            <td><span class="pin-chip">GPIO 7</span> e <span class="pin-chip">GND</span></td>
+                            <td>Clique = Troca Expressão • Duplo = Moeda Mario • Longo = Música</td>
                         </tr>
                         <tr>
                             <td><strong>Linhas Livres de Expansão</strong></td>
@@ -3289,6 +3333,12 @@
                 badge: 'GPIO 16 (LEDC/PWM)',
                 body: 'Segundo transdutor piezoelétrico adicionado para áudio polifônico real a 2 vozes.<br>• <strong>Linha 50 f (+):</strong> Conectado no GPIO 16.<br>• <strong>Linha 52 j (-):</strong> Conectado no barramento GND.<br>Gera harmonia, contracanto, acordes de duas notas e efeitos estéreo ping-pong!',
                 action: '<button onclick="sendEsp32Command(\'buzzer2\')" class="proto-filter-btn" style="background:#451a03; color:#fef08a; border-color:#eab308;">🔊 Testar Buzzer 2 no Robô (GPIO 16)</button>'
+            },
+            'button': {
+                title: '🔘 Botão Táctil Multifunção (Linhas 44 a 46 Esquerda)',
+                badge: 'GPIO 7 (INPUT_PULLUP)',
+                body: 'Push Button físico ligado diretamente no GPIO 7 com resistor interno de pull-up do ESP32.<br>• <strong>Linha 44 (+):</strong> Conectado ao GPIO 7.<br>• <strong>Linha 46 (-):</strong> Conectado ao barramento GND.<br><strong>Ações Físicas:</strong><br>• <strong>1 Clique Rápido:</strong> Alterna expressões (Feliz ➔ Amor ➔ Surpreso ➔ Bravo ➔ Sono ➔ Normal).<br>• <strong>2 Cliques Rápidos:</strong> Moeda do Mario (+200 PTS).<br>• <strong>Segurar (> 1.2s):</strong> Toca a próxima música retrô 8-bit completa!',
+                action: '<button onclick="testButtonPress()" class="proto-filter-btn" style="background:#0369a1; color:#e0f2fe; border-color:#38bdf8;">🔘 Simular Clique no Botão</button>'
             }
         };
 
@@ -3309,7 +3359,9 @@
             'buzzer_sig': { title: 'Fio Branco: GPIO 15 ➔ Terminal Positivo Buzzer 1 (Linha 50)', text: 'Sinal de onda quadrada sintetizado por PWM de áudio para gerar tons 8-bit.' },
             'buzzer_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer 1 (Linha 52) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer 1.' },
             'buzzer2_sig': { title: 'Fio Laranja: GPIO 16 ➔ Terminal Positivo Buzzer 2 (Linha 50 f)', text: 'Canal secundário de áudio para harmonia, contracanto e efeitos estéreo.' },
-            'buzzer2_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer 2 (Linha 52 j) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer 2.' }
+            'buzzer2_gnd': { title: 'Jumper Preto: Terminal Negativo Buzzer 2 (Linha 52 j) ➔ Trilho (-)', text: 'Retorno de terra do Buzzer 2.' },
+            'button_sig': { title: 'Fio Ciano: GPIO 7 ➔ Terminal 1 Botão (Linha 44 a)', text: 'Pino digital configurado com INPUT_PULLUP no ESP32-S3.' },
+            'button_gnd': { title: 'Jumper Preto: Terminal 2 Botão (Linha 46 a) ➔ Trilho (-)', text: 'Retorno para o GND quando o botão é pressionado (nível lógico LOW).' }
         };
 
         function inspectComponent(compId) {
@@ -3329,7 +3381,8 @@
                 compId === 'led_green' ? 'compLedGreen' :
                 compId === 'led_red' ? 'compLedRed' :
                 compId === 'pot' ? 'compPot' :
-                compId === 'buzzer2' ? 'compBuzzer2' : 'compBuzzer'
+                compId === 'buzzer2' ? 'compBuzzer2' :
+                compId === 'button' ? 'compButton' : 'compBuzzer'
             );
             if (compEl) compEl.style.filter = 'drop-shadow(0 0 12px #38bdf8)';
         }
@@ -3413,6 +3466,11 @@
         function testBuzzerSound() {
             playTone(440, 250, 'square', 0);
             setTimeout(() => { playTone(880, 200, 'square', 0); }, 280);
+        }
+
+        function testButtonPress() {
+            sendEsp32Command('happy');
+            if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(40);
         }
 
         function updateStepProgress() {
