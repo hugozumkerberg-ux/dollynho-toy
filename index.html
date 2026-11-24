@@ -1218,13 +1218,15 @@
         <div class="dashboard-grid" style="grid-template-columns: 1fr;">
             <!-- Card 4: Jukebox 8-Bits (Chiptune Synthesizer) -->
             <div class="card">
-                <div class="card-title">
-                    <span>🎶 Jukebox 8-Bits (Chiptune)</span>
-                    <span style="font-size: 0.75rem; color: var(--accent-purple);">Web Audio Synth</span>
+                <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <span>🎶 Jukebox 8-Bits do Robô</span>
+                    <button id="browserAudioToggleBtn" onclick="toggleBrowserAudio()" style="font-size: 0.76rem; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--card-border); background: #0f172a; color: var(--text-muted); cursor: pointer;" title="Por padrão o som toca no Buzzer do Robô via Wi-Fi">
+                        🔇 Som no PC: <strong>Mudo (Toca no Robô)</strong>
+                    </button>
                 </div>
 
                 <p style="font-size: 0.85rem; color: var(--text-muted);">
-                    Toque no navegador e veja os LEDs e visor dançarem no compasso das notas:
+                    Clique na música para enviar via Wi-Fi diretamente para o <strong>Buzzer do Dollynho Toy</strong> tocar:
                 </p>
 
                 <div class="music-grid">
@@ -2308,10 +2310,40 @@
             return audioCtx;
         }
 
-        // Desbloqueia áudio imediatamente ao clicar na página
-        document.addEventListener('click', () => { getAudioContext(); });
+        // Controle de Áudio Local do Computador (Silenciado por padrão para tocar no robô!)
+        let browserAudioEnabled = false;
+
+        function toggleBrowserAudio() {
+            browserAudioEnabled = !browserAudioEnabled;
+            const btn = document.getElementById('browserAudioToggleBtn');
+            if (btn) {
+                if (browserAudioEnabled) {
+                    btn.innerHTML = '🔊 Som no PC: <strong>Ligado</strong>';
+                    btn.style.borderColor = '#22c55e';
+                    btn.style.color = '#86efac';
+                    btn.style.background = '#064e3b';
+                } else {
+                    btn.innerHTML = '🔇 Som no PC: <strong>Mudo (Toca no Robô)</strong>';
+                    btn.style.borderColor = 'var(--card-border)';
+                    btn.style.color = 'var(--text-muted)';
+                    btn.style.background = '#0f172a';
+                }
+            }
+        }
+
+        // Desbloqueia áudio se o usuário optar por ouvir no PC
+        document.addEventListener('click', () => { if (browserAudioEnabled) getAudioContext(); });
 
         function playTone(freq, durationMs, type = 'square', delayMs = 0) {
+            // Alterna LEDs virtuais na batida da música no dashboard
+            setTimeout(() => {
+                if (freq > 500) setLedColor('green');
+                else setLedColor('yellow');
+            }, delayMs);
+
+            // Se o áudio do computador estiver desativado (padrão), o som NÃO sai nas caixas do PC/celular
+            if (!browserAudioEnabled) return;
+
             setTimeout(() => {
                 try {
                     const ctx = getAudioContext();
@@ -2319,17 +2351,12 @@
                     const gain = ctx.createGain();
                     osc.type = type;
                     osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                    // Volume 0.35 para tocar bem alto no computador
-                    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.25, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationMs / 1000);
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     osc.start();
                     osc.stop(ctx.currentTime + durationMs / 1000);
-
-                    // Alterna LEDs na batida da música
-                    if (freq > 500) setLedColor('green');
-                    else setLedColor('yellow');
                 } catch (e) {
                     console.error('WebAudio:', e);
                 }
@@ -2799,7 +2826,7 @@
         }
 
         function play8Bit(song) {
-            getAudioContext();
+            if (browserAudioEnabled) getAudioContext();
             isMusicPlaying = true;
 
             const espSongMap = {
@@ -3520,16 +3547,20 @@
             }
         }
 
+        function getApiUrl() {
+            const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (isLocalHost) return 'https://bazardasnovidades.com/robo/api.php';
+            if (window.location.pathname.includes('/dollynho')) return '/dollynho/api.php';
+            return '/robo/api.php';
+        }
+
         async function sendViaCloudApi(cmd) {
             try {
-                const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                // No domínio da Hostinger ou remoto, utiliza api.php
-                const apiUrl = isLocalHost ? 'https://bazardasnovidades.com/robo/api.php' : 'api.php';
-                
+                const apiUrl = getApiUrl();
                 const resp = await fetch(`${apiUrl}?action=send_cmd&cmd=${encodeURIComponent(cmd)}`);
                 const data = await resp.json();
                 if (data.success) {
-                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[NUVEM WI-FI] ➔ ${cmd} (Enviado ao Robô!)`, 'sent');
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[NUVEM WI-FI] ➔ ${cmd} (Enviado para o Robô tocar!)`, 'sent');
                 } else {
                     appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO NUVEM] ${data.error || 'Falha ao enviar'}`, 'error');
                 }
@@ -3604,8 +3635,7 @@
             const text = document.getElementById('cloudStatusText');
             const pingBadge = document.getElementById('cloudPingBadge');
 
-            const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const cloudApiUrl = isLocalHost ? 'https://bazardasnovidades.com/robo/api.php' : 'api.php';
+            const cloudApiUrl = getApiUrl();
 
             try {
                 const resp = await fetch(`${cloudApiUrl}?action=status`);
