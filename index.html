@@ -1007,7 +1007,7 @@
 
         // Piscar automático a cada 4 segundos
         setInterval(() => {
-            if (currentFace !== 'sleepy') {
+            if (currentFace !== 'sleepy' && !songVisualInterval) {
                 triggerBlink();
             }
         }, 4200);
@@ -1140,6 +1140,95 @@
             }, delayMs);
         }
 
+        function drawMarioWebCanvas(step) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText("MARIO  x03   WORLD 1-1", 16, 18);
+
+            // Chão com tijolos
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, 116, 256, 4);
+
+            // Bloco de Interrogação [?]
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(116, 52, 24, 24);
+            ctx.fillText("?", 124, 69);
+
+            // Posição do Mario
+            let mx = (step * 8) % 270 - 20;
+            let my = 88;
+            let isJumping = (mx >= 75 && mx <= 165);
+            if (isJumping) {
+                let prog = (mx - 75) / 90;
+                my = 88 - Math.sin(prog * Math.PI) * 32;
+                if (mx >= 105 && mx <= 135) {
+                    ctx.fillText("🪙", 120, 36);
+                }
+            }
+
+            ctx.font = '24px sans-serif';
+            ctx.fillText("🏃", mx, my + 20);
+        }
+
+        function drawStarWarsWebCanvas(step, title) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Hyperspace Stars
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 28; i++) {
+                let angle = i * 12.8 * 0.0174533;
+                let dist = ((step * 6 + i * 14) % 135);
+                let sx = 128 + Math.cos(angle) * dist;
+                let sy = 64 + Math.sin(angle) * dist * 0.52;
+                ctx.fillRect(sx, sy, dist > 60 ? 3 : 1.5, dist > 60 ? 3 : 1.5);
+            }
+
+            // Moldura Logo Star Wars
+            ctx.fillStyle = '#090d16';
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 3;
+            roundRect(ctx, 24, 26, 208, 76, 8);
+            ctx.stroke();
+
+            ctx.fillStyle = '#facc15';
+            ctx.font = '900 24px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("STAR WARS", 128, 62);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(`[ ${title} ]`, 128, 86);
+            ctx.textAlign = 'left';
+        }
+
+        let songVisualInterval = null;
+
+        function startSongVisual(type, title, totalDurationMs) {
+            if (songVisualInterval) clearInterval(songVisualInterval);
+            let step = 0;
+            songVisualInterval = setInterval(() => {
+                step++;
+                if (type === 'mario') {
+                    drawMarioWebCanvas(step);
+                } else if (type === 'starwars') {
+                    drawStarWarsWebCanvas(step, title);
+                }
+            }, 60);
+
+            setTimeout(() => {
+                if (songVisualInterval) {
+                    clearInterval(songVisualInterval);
+                    songVisualInterval = null;
+                    drawOled();
+                }
+            }, totalDurationMs);
+        }
+
         function play8Bit(song) {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -1170,6 +1259,7 @@
                     if (n.f > 0) playTone(n.f, n.d, 'sawtooth', time);
                     time += n.d + 35;
                 });
+                startSongVisual('starwars', 'IMPERIAL MARCH', time);
             } else if (song === 'starwars_main') {
                 setFace('happy');
                 const notes = [
@@ -1188,6 +1278,7 @@
                     if (n.f > 0) playTone(n.f, n.d, 'square', time);
                     time += n.d + 30;
                 });
+                startSongVisual('starwars', 'MAIN THEME', time);
             } else if (song === 'mario') {
                 setFace('happy');
                 const notes = [
@@ -1203,6 +1294,7 @@
                     if (n.f > 0) playTone(n.f, n.d, 'square', time);
                     time += n.d + 30;
                 });
+                startSongVisual('mario', '', time);
             } else if (song === 'tetris') {
                 setFace('focus');
                 const notes = [

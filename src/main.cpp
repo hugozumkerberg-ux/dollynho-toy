@@ -10,6 +10,7 @@
 #include "config_robot.h"
 #include "pitches.h"
 #include "songs_8bit.h"
+#include "graphics_oled.h"
 
 // Desativa macros conflitantes do RoboEyes com templates
 #ifdef N
@@ -56,17 +57,17 @@ void setLedsColor(uint8_t r, uint8_t g, uint8_t b, uint8_t scale = 255) {
     analogWrite(PIN_LED_AMARELO,  (((g > 0 && r > 0 ? 180 : 0)) * scale) / 255);
     analogWrite(PIN_LED_VERDE,    (g * scale) / 255);
     // Ativa o LED RGB On-board do ESP32-S3 (GPIO 48)
-    neopixelWrite(RGB_BUILTIN, (r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
+    rgbLedWrite(RGB_BUILTIN, (r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
 }
 
 // 3 Piscadas Verdes: Wi-Fi Conectado com sucesso
 void blinkWifiConnected() {
     Serial.println("[LED ESP32] 3 Piscadas Verdes: Wi-Fi Conectado!");
     for (int i = 0; i < 3; i++) {
-        neopixelWrite(RGB_BUILTIN, 0, 220, 0); // Verde forte no ESP32
+        rgbLedWrite(RGB_BUILTIN, 0, 220, 0); // Verde forte no ESP32
         analogWrite(PIN_LED_VERDE, 255);       // Verde externo
         delay(180);
-        neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+        rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
         analogWrite(PIN_LED_VERDE, 0);
         delay(180);
     }
@@ -75,28 +76,37 @@ void blinkWifiConnected() {
 // 1 Piscada Azul: Resposta da API IA recebida com sucesso (OK)
 void blinkApiOk() {
     Serial.println("[LED ESP32] 1 Piscada Azul: API Gemini IA OK!");
-    neopixelWrite(RGB_BUILTIN, 0, 0, 255); // Azul forte no ESP32
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 255); // Azul forte no ESP32
     delay(450);
-    neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
 }
 
 void flashLeds(int count, int delayMs, bool isGreen) {
     for (int i = 0; i < count; i++) {
         analogWrite(isGreen ? PIN_LED_VERDE : PIN_LED_VERMELHO, 255);
         analogWrite(isGreen ? PIN_LED_VERMELHO : PIN_LED_VERDE, 0);
-        neopixelWrite(RGB_BUILTIN, isGreen ? 0 : 255, isGreen ? 255 : 0, 0);
+        rgbLedWrite(RGB_BUILTIN, isGreen ? 0 : 255, isGreen ? 255 : 0, 0);
         delay(delayMs);
         analogWrite(PIN_LED_VERDE, 0);
         analogWrite(PIN_LED_VERMELHO, 0);
-        neopixelWrite(RGB_BUILTIN, 0, 0, 0);
+        rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
         delay(delayMs);
     }
 }
 
+// Modos de Exibição Visual durante a Música
+enum VisualSongTheme {
+    THEME_NONE,
+    THEME_MARIO,
+    THEME_STAR_WARS_IMPERIAL,
+    THEME_STAR_WARS_MAIN
+};
+
 // ----------------------------------------------------
-// Tocador de Músicas 8-Bits com Animação Fluida dos Olhos
+// Tocador de Músicas 8-Bits com Animação Visual no OLED
 // ----------------------------------------------------
-void playSong(const Note* song, int length) {
+void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) {
+    showingText = true; // Pausa o RoboEyes para exibir a cena visual da música
     for (int i = 0; i < length; i++) {
         Note n;
         memcpy_P(&n, &song[i], sizeof(Note));
@@ -107,6 +117,15 @@ void playSong(const Note* song, int length) {
         // Leitura dinâmica do potenciômetro para brilho durante a música
         int potValue = analogRead(PIN_POTENCIOMETRO);
         uint8_t brightness = map(potValue, 0, 4095, 40, 255);
+
+        // Atualiza a cena visual no OLED a cada nota
+        if (theme == THEME_MARIO) {
+            drawMarioScene(i, display);
+        } else if (theme == THEME_STAR_WARS_IMPERIAL) {
+            drawStarWarsScene(i, "IMPERIAL MARCH", display);
+        } else if (theme == THEME_STAR_WARS_MAIN) {
+            drawStarWarsScene(i, "MAIN THEME", display);
+        }
 
         if (pitch > 0) {
             tone(PIN_BUZZER, pitch, duration);
@@ -122,13 +141,12 @@ void playSong(const Note* song, int length) {
             setLedsColor(0, 0, 0, 0);
         }
 
-        // Divide a duração da nota em fatias pequenas para manter o RoboEyes animando suavemente
         int elapsed = 0;
         while (elapsed < duration) {
-            int step = min(20, duration - elapsed);
+            int step = min(25, duration - elapsed);
             delay(step);
             elapsed += step;
-            if (!showingText) {
+            if (theme == THEME_NONE) {
                 roboEyes.update();
             }
         }
@@ -138,6 +156,8 @@ void playSong(const Note* song, int length) {
         delay(25); // Breve pausa entre as notas
     }
     noTone(PIN_BUZZER);
+    showingText = false; // Retorna aos olhinhos orgânicos do RoboEyes
+    roboEyes.update();
 }
 
 void play8BitCoin() {
@@ -244,7 +264,7 @@ void askGemini(String userQuery) {
         JsonObject contents = docReq["contents"].to<JsonArray>().add<JsonObject>();
         JsonObject parts = contents["parts"].to<JsonArray>().add<JsonObject>();
         
-        String systemPrompt = "Voce e o robo assistente 'Bito'. Responda em portugues em ate 14 palavras. "
+        String systemPrompt = "Voce e o robo assistente 'Dollynho Toy'. Responda em portugues em ate 14 palavras. "
                               "No final inclua obrigatoriamente um humor: [HAPPY], [ANGRY], [TIRED] ou [DEFAULT]. "
                               "Mensagem: " + userQuery;
         parts["text"] = systemPrompt;
@@ -262,12 +282,12 @@ void askGemini(String userQuery) {
                 if (replyText) {
                     String fullReply = String(replyText);
                     fullReply.trim();
-                    Serial.println("\n[Bito]: " + fullReply);
+                    Serial.println("\n[Dollynho]: " + fullReply);
 
                     if (fullReply.indexOf("[ANGRY]") >= 0) {
                         roboEyes.setMood(ANGRY);
                         fullReply.replace("[ANGRY]", "");
-                        playSong(SONG_IMPERIAL_MARCH, 18); // Toca trecho da marcha imperial
+                        playSong(SONG_IMPERIAL_MARCH, 18, THEME_STAR_WARS_IMPERIAL); // Toca trecho da marcha imperial
                     } else if (fullReply.indexOf("[TIRED]") >= 0) {
                         roboEyes.setMood(TIRED);
                         fullReply.replace("[TIRED]", "");
@@ -289,7 +309,7 @@ void askGemini(String userQuery) {
                     display.setTextSize(1);
                     display.setTextColor(SSD1306_WHITE);
                     display.setCursor(0, 0);
-                    display.println("--- Bito diz: ---");
+                    display.println("--- Dollynho diz: ---");
                     display.println();
                     display.println(fullReply);
                     display.display();
@@ -308,7 +328,7 @@ void setup() {
     Serial.begin(115200);
     delay(800);
     Serial.println("\n==============================================");
-    Serial.println("  🤖 Bito: Músicas 8-Bits + Star Wars + B3    ");
+    Serial.println("  🤖 Dollynho Toy: Músicas 8-Bits + Star Wars ");
     Serial.println("==============================================");
 
     pinMode(PIN_LED_VERDE, OUTPUT);
@@ -392,26 +412,26 @@ void loop() {
         else if (cmd == "confused") { roboEyes.anim_confused(); tone(PIN_BUZZER, NOTE_A5, 80); delay(80); noTone(PIN_BUZZER); }
         else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
         
-        // MÚSICAS COMPLETAS
+        // MÚSICAS COMPLETAS COM ANIMAÇÃO VISUAL
         else if (cmd == "starwars" || cmd == "sw") {
-            Serial.println("[Música] Tocando Star Wars: Tema Principal Completo!");
+            Serial.println("[Música] Tocando Star Wars: Tema Principal + Logo no OLED!");
             roboEyes.setMood(HAPPY);
-            playSong(SONG_STAR_WARS_MAIN, LEN_STAR_WARS_MAIN);
+            playSong(SONG_STAR_WARS_MAIN, LEN_STAR_WARS_MAIN, THEME_STAR_WARS_MAIN);
         }
         else if (cmd == "imperial" || cmd == "vader") {
-            Serial.println("[Música] Tocando Star Wars: Marcha Imperial Completa!");
+            Serial.println("[Música] Tocando Star Wars: Marcha Imperial + Logo no OLED!");
             roboEyes.setMood(ANGRY);
-            playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH);
+            playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL);
         }
         else if (cmd == "mario") {
-            Serial.println("[Música] Tocando Super Mario Bros Completo!");
+            Serial.println("[Música] Tocando Super Mario Bros + Animação no OLED!");
             roboEyes.setMood(HAPPY);
-            playSong(SONG_MARIO_FULL, LEN_MARIO_FULL);
+            playSong(SONG_MARIO_FULL, LEN_MARIO_FULL, THEME_MARIO);
         }
         else if (cmd == "tetris") {
             Serial.println("[Música] Tocando Tetris Korobeiniki Completo!");
             roboEyes.setMood(DEFAULT);
-            playSong(SONG_TETRIS_FULL, LEN_TETRIS_FULL);
+            playSong(SONG_TETRIS_FULL, LEN_TETRIS_FULL, THEME_NONE);
         }
         else {
             askGemini(cmd);

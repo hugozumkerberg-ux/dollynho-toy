@@ -24,13 +24,14 @@ O **Dollynho Toy** é um robô assistente de mesa interativo baseado no microcon
   - Consulta automática via Wi-Fi a cada 5 minutos.
   - Se a ação subir: **LED Verde pisca** + comemoração 8-bit + olhos felizes.
   - Se a ação cair: **LED Vermelho pisca** + tom grave + olhos tristes com gota de suor.
-- **🎼 Jukebox 8-Bits Chiptune no Buzzer:**
-  - ⚔️ **Star Wars:** *The Imperial March (Marcha Imperial)* Completa!
-  - 🚀 **Star Wars:** *Main Theme (Tema Principal)* Completo!
-  - 🍄 **Super Mario Bros:** Tema overworld completo!
+- **🎼 Jukebox 8-Bits Chiptune com Animação Visual no OLED:**
+  - 🍄 **Super Mario Bros:** Tema completo com **animação do Mario no OLED** (Mario correndo pela fase World 1-1, pulo no bloco [?] e moeda saltando)!
+  - ⚔️ **Star Wars - Marcha Imperial:** Tema completo com **logo Star Wars estilizado + Hyperspace** (campo estelar 3D na velocidade da luz)!
+  - 🚀 **Star Wars - Tema Principal:** Tema completo com **logo Star Wars + Hyperspace**!
   - 🧱 **Tetris:** *Korobeiniki* completo!
   - 🪙 Som de Moeda / 1-Up!
   - Show de luzes sincronizado nos LEDs Verde e Vermelho durante a reprodução.
+  - Sincronização visual em tempo real no simulador OLED do Painel Web!
 - **🧠 Inteligência Artificial com Google Gemini:**
   - Responde a perguntas em português enviadas pelo Monitor Serial ou pelo Microfone do Painel Web.
   - Escolhe autonomamente a expressão e cor dos LEDs com base no sentimento da resposta.
