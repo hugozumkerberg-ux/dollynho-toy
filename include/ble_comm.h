@@ -63,7 +63,6 @@ inline void setupBle() {
         BLE_CHARACTERISTIC_UUID_TX,
         BLECharacteristic::PROPERTY_NOTIFY
     );
-    pBleTxCharacteristic->addDescriptor(new BLE2902());
 
     // Característica RX (Comandos do Celular/Dashboard para o Robô)
     BLECharacteristic* pRxCharacteristic = pService->createCharacteristic(
