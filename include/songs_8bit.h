@@ -1,0 +1,111 @@
+#ifndef SONGS_8BIT_H
+#define SONGS_8BIT_H
+
+#include <Arduino.h>
+#include "pitches.h"
+
+// Estrutura de Nota Musical
+struct Note {
+    int pitch;
+    int durationMs;
+};
+
+// -------------------------------------------------------------
+// 1. STAR WARS: THE IMPERIAL MARCH (MARCHA IMPERIAL COMPLETA)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_IMPERIAL_MARCH[] = {
+    // Parte 1
+    {NOTE_A4, 500}, {NOTE_A4, 500}, {NOTE_A4, 500}, {NOTE_F4, 350}, {NOTE_C5, 150},
+    {NOTE_A4, 500}, {NOTE_F4, 350}, {NOTE_C5, 150}, {NOTE_A4, 650}, {REST, 150},
+    {NOTE_E5, 500}, {NOTE_E5, 500}, {NOTE_E5, 500}, {NOTE_F5, 350}, {NOTE_C5, 150},
+    {NOTE_GS4, 500}, {NOTE_F4, 350}, {NOTE_C5, 150}, {NOTE_A4, 650}, {REST, 150},
+
+    // Parte 2 (Solo Agudo)
+    {NOTE_A5, 500}, {NOTE_A4, 300}, {NOTE_A4, 150}, {NOTE_A5, 450}, {NOTE_GS5, 300}, {NOTE_G5, 200},
+    {NOTE_FS5, 125}, {NOTE_F5, 125}, {NOTE_FS5, 250}, {REST, 250}, {NOTE_AS4, 250}, {NOTE_DS5, 400},
+    {NOTE_D5, 200}, {NOTE_CS5, 125}, {NOTE_C5, 125}, {NOTE_B4, 250}, {REST, 250}, {NOTE_F4, 250},
+    {NOTE_GS4, 450}, {NOTE_F4, 300}, {NOTE_A4, 150}, {NOTE_C5, 450}, {NOTE_A4, 300}, {NOTE_C5, 150},
+    {NOTE_E5, 650}, {REST, 150},
+
+    // Parte 3 (Repetição com final clássico)
+    {NOTE_A5, 500}, {NOTE_A4, 300}, {NOTE_A4, 150}, {NOTE_A5, 450}, {NOTE_GS5, 300}, {NOTE_G5, 200},
+    {NOTE_FS5, 125}, {NOTE_F5, 125}, {NOTE_FS5, 250}, {REST, 250}, {NOTE_AS4, 250}, {NOTE_DS5, 400},
+    {NOTE_D5, 200}, {NOTE_CS5, 125}, {NOTE_C5, 125}, {NOTE_B4, 250}, {REST, 250}, {NOTE_F4, 250},
+    {NOTE_GS4, 450}, {NOTE_F4, 300}, {NOTE_C5, 150}, {NOTE_A4, 500}, {NOTE_F4, 350}, {NOTE_C5, 150},
+    {NOTE_A4, 800}
+};
+const int LEN_IMPERIAL_MARCH = sizeof(SONG_IMPERIAL_MARCH) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 2. STAR WARS: MAIN THEME (TEMA PRINCIPAL / FANFARRA COMPLETA)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_STAR_WARS_MAIN[] = {
+    // Intro
+    {NOTE_D4, 150}, {NOTE_D4, 150}, {NOTE_D4, 150},
+    {NOTE_G4, 600}, {NOTE_D5, 600},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G5, 600}, {NOTE_D5, 350},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G5, 600}, {NOTE_D5, 350},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_C5, 150}, {NOTE_A4, 600}, {REST, 200},
+
+    // Segunda estrofe
+    {NOTE_D4, 150}, {NOTE_D4, 150}, {NOTE_D4, 150},
+    {NOTE_G4, 600}, {NOTE_D5, 600},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G5, 600}, {NOTE_D5, 350},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G5, 600}, {NOTE_D5, 350},
+    {NOTE_C5, 150}, {NOTE_B4, 150}, {NOTE_C5, 150}, {NOTE_A4, 600}, {REST, 200},
+
+    // Ponte épica
+    {NOTE_D4, 200}, {NOTE_D4, 100}, {NOTE_E4, 300}, {NOTE_E4, 150}, {NOTE_C5, 200}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G4, 150},
+    {NOTE_G4, 150}, {NOTE_A4, 150}, {NOTE_B4, 150}, {NOTE_A4, 300}, {NOTE_E4, 200}, {NOTE_FS4, 400},
+    {NOTE_D4, 200}, {NOTE_D4, 100}, {NOTE_E4, 300}, {NOTE_E4, 150}, {NOTE_C5, 200}, {NOTE_B4, 150}, {NOTE_A4, 150}, {NOTE_G4, 150},
+    {NOTE_D5, 500}, {NOTE_A4, 500}, {NOTE_D4, 600}
+};
+const int LEN_STAR_WARS_MAIN = sizeof(SONG_STAR_WARS_MAIN) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 3. SUPER MARIO BROS (TEMA PRINCIPAL COMPLETO)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_MARIO_FULL[] = {
+    // Intro
+    {NOTE_E5, 120}, {NOTE_E5, 120}, {REST, 100}, {NOTE_E5, 120}, {REST, 100}, {NOTE_C5, 120}, {NOTE_E5, 120},
+    {REST, 100}, {NOTE_G5, 240}, {REST, 150}, {NOTE_G4, 240}, {REST, 200},
+
+    // Parte A
+    {NOTE_C5, 180}, {REST, 100}, {NOTE_G4, 180}, {REST, 100}, {NOTE_E4, 180}, {REST, 100},
+    {NOTE_A4, 180}, {NOTE_B4, 180}, {NOTE_AS4, 120}, {NOTE_A4, 180},
+    {NOTE_G4, 140}, {NOTE_E5, 140}, {NOTE_G5, 140}, {NOTE_A5, 180}, {NOTE_F5, 120}, {NOTE_G5, 120},
+    {REST, 80}, {NOTE_E5, 180}, {NOTE_C5, 120}, {NOTE_D5, 120}, {NOTE_B4, 200}, {REST, 150},
+
+    // Parte B (Repete com variação)
+    {NOTE_C5, 180}, {REST, 100}, {NOTE_G4, 180}, {REST, 100}, {NOTE_E4, 180}, {REST, 100},
+    {NOTE_A4, 180}, {NOTE_B4, 180}, {NOTE_AS4, 120}, {NOTE_A4, 180},
+    {NOTE_G4, 140}, {NOTE_E5, 140}, {NOTE_G5, 140}, {NOTE_A5, 180}, {NOTE_F5, 120}, {NOTE_G5, 120},
+    {REST, 80}, {NOTE_E5, 180}, {NOTE_C5, 120}, {NOTE_D5, 120}, {NOTE_B4, 250}
+};
+const int LEN_MARIO_FULL = sizeof(SONG_MARIO_FULL) / sizeof(Note);
+
+// -------------------------------------------------------------
+// 4. TETRIS: KOROBEINIKI (TEMA COMPLETO)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_TETRIS_FULL[] = {
+    // Parte 1
+    {NOTE_E5, 200}, {NOTE_B4, 100}, {NOTE_C5, 100}, {NOTE_D5, 200}, {NOTE_C5, 100}, {NOTE_B4, 100},
+    {NOTE_A4, 200}, {NOTE_A4, 100}, {NOTE_C5, 100}, {NOTE_E5, 200}, {NOTE_D5, 100}, {NOTE_C5, 100},
+    {NOTE_B4, 250}, {NOTE_C5, 100}, {NOTE_D5, 200}, {NOTE_E5, 200},
+    {NOTE_C5, 200}, {NOTE_A4, 200}, {NOTE_A4, 300}, {REST, 100},
+
+    // Parte 2
+    {NOTE_D5, 250}, {NOTE_F5, 100}, {NOTE_A5, 200}, {NOTE_G5, 100}, {NOTE_F5, 100},
+    {NOTE_E5, 300}, {NOTE_C5, 100}, {NOTE_E5, 200}, {NOTE_D5, 100}, {NOTE_C5, 100},
+    {NOTE_B4, 200}, {NOTE_B4, 100}, {NOTE_C5, 100}, {NOTE_D5, 200}, {NOTE_E5, 200},
+    {NOTE_C5, 200}, {NOTE_A4, 200}, {NOTE_A4, 350}, {REST, 150},
+
+    // Parte 3 (Refrão / Baixo)
+    {NOTE_E4, 200}, {NOTE_C4, 200}, {NOTE_D4, 200}, {NOTE_B3, 200},
+    {NOTE_C4, 200}, {NOTE_A3, 200}, {NOTE_GS3, 250}, {NOTE_B3, 200},
+    {NOTE_E4, 200}, {NOTE_C4, 200}, {NOTE_D4, 200}, {NOTE_B3, 200},
+    {NOTE_C4, 150}, {NOTE_E4, 150}, {NOTE_A4, 300}, {NOTE_GS4, 400}
+};
+const int LEN_TETRIS_FULL = sizeof(SONG_TETRIS_FULL) / sizeof(Note);
+
+#endif // SONGS_8BIT_H

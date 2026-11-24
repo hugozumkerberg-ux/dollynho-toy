@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bito - Painel de Controle do Robô Assistente ESP32-S3</title>
+    <style>
+        :root {
+            --bg-dark: #0a0f1d;
+            --card-bg: #131d31;
+            --card-border: #233554;
+            --accent-cyan: #38bdf8;
+            --accent-green: #22c55e;
+            --accent-yellow: #eab308;
+            --accent-red: #ef4444;
+            --accent-purple: #a855f7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --oled-blue: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, var(--bg-dark) 75%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        /* Topo / Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 24px;
+        }
+
+        .robot-identity {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .robot-avatar {
+            font-size: 2.2rem;
+            background: #1e293b;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 6px 12px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .robot-name-box h1 {
+            font-size: 1.6rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .robot-name-box h1 input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px dashed var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-size: 1.6rem;
+            font-weight: bold;
+            width: 140px;
+            outline: none;
+        }
+
+        .badges-top {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge.online { border-color: var(--accent-green); color: var(--accent-green); }
+        .badge.b3 { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 10px;
+        }
+
+        /* 1. Simulador OLED Físico */
+        .chassis-box {
+            background: #090d16;
+            border: 4px solid #334155;
+            border-radius: 28px;
+            padding: 24px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.6);
+            position: relative;
+        }
+
+        .side-led {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 2px solid #475569;
+            transition: all 0.25s ease;
+        }
+
+        .led-green-glow {
+            background: #22c55e !important;
+            border-color: #86efac !important;
+            box-shadow: 0 0 25px #22c55e, 0 0 50px rgba(34, 197, 94, 0.6);
+            animation: pulse-green 1.5s infinite ease-in-out;
+        }
+
+        .led-red-glow {
+            background: #ef4444 !important;
+            border-color: #fca5a5 !important;
+            box-shadow: 0 0 25px #ef4444, 0 0 50px rgba(239, 68, 68, 0.6);
+            animation: pulse-red 1s infinite ease-in-out;
+        }
+
+        .led-yellow-glow {
+            background: #eab308 !important;
+            border-color: #fef08a !important;
+            box-shadow: 0 0 25px #eab308, 0 0 50px rgba(234, 179, 8, 0.6);
+            animation: pulse-yellow 0.8s infinite ease-in-out;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 0.4; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes pulse-red {
+            0%, 100% { opacity: 0.35; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.15); }
+        }
+        @keyframes pulse-yellow {
+            0%, 100% { opacity: 0.4; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .oled-viewport {
+            width: 256px;
+            height: 128px;
+            background: #000;
+            border: 3px solid #1e293b;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        canvas#oledCanvas {
+            image-rendering: pixelated;
+        }
+
+        /* Seletor de Rostos */
+        .faces-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .btn-face {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-face:hover {
+            border-color: var(--accent-cyan);
+            background: #27354f;
+            transform: translateY(-2px);
+        }
+        .btn-face.active {
+            border-color: var(--accent-cyan);
+            background: #0284c7;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        /* 2. Card BBAS3 Bolsa B3 */
+        .stock-box {
+            background: #090d16;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-ticker {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+        }
+        .stock-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stock-price-box {
+            text-align: right;
+        }
+        .stock-price {
+            font-size: 1.6rem;
+            font-weight: 900;
+            font-family: monospace;
+        }
+        .stock-change {
+            font-size: 0.9rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+        .change-up { color: var(--accent-green); }
+        .change-down { color: var(--accent-red); }
+
+        .stock-reactions {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        /* 3. "Me Ouça" - Reconhecimento de Voz */
+        .voice-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .btn-mic {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 3px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
+            transition: all 0.3s;
+        }
+        .btn-mic:hover {
+            transform: scale(1.08);
+            background: #0284c7;
+            color: #fff;
+        }
+        .btn-mic.listening {
+            background: #ef4444;
+            border-color: #fca5a5;
+            color: #fff;
+            animation: mic-pulse 1s infinite alternate;
+        }
+        @keyframes mic-pulse {
+            from { box-shadow: 0 0 15px #ef4444; transform: scale(1); }
+            to { box-shadow: 0 0 35px #ef4444, 0 0 60px rgba(239, 68, 68, 0.5); transform: scale(1.12); }
+        }
+
+        .voice-transcript {
+            background: #090d16;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            min-height: 50px;
+            font-size: 0.9rem;
+            color: var(--accent-cyan);
+            text-align: left;
+            font-style: italic;
+        }
+
+        /* 4. Jukebox 8-Bits */
+        .music-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .btn-music {
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-music:hover {
+            border-color: var(--accent-purple);
+            background: #1e1b4b;
+            color: #c084fc;
+        }
+        .btn-music.playing {
+            border-color: var(--accent-purple);
+            background: var(--accent-purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+        }
+
+        /* 5. Diagrama Esquemático */
+        .diagram-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .diagram-table th, .diagram-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .diagram-table th { color: var(--text-muted); }
+
+        .wire-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+        .pin-chip {
+            background: #090d16;
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        /* Web Serial Button */
+        .serial-bar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #090d16;
+            border: 1px solid var(--card-border);
+            padding: 10px 14px;
+            border-radius: 8px;
+        }
+        .serial-bar button {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .serial-bar button:hover { background: #0369a1; }
+        .serial-status { font-size: 0.85rem; color: var(--text-muted); }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header Principal -->
+    <header>
+        <div class="robot-identity">
+            <div class="robot-avatar">🧃</div>
+            <div class="robot-name-box">
+                <h1>
+                    <input type="text" id="robotNameInput" value="Dollynho Toy" title="Clique para renomear seu robô"> 
+                    <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: normal;">(ESP32-S3 Amiguinho)</span>
+                </h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">"Oi, eu sou o Dollynho Toy, seu amiguinho!" • Gemini IA & Star Wars 8-Bit</p>
+            </div>
+        </div>
+
+        <div class="badges-top">
+            <div class="badge online">● Wi-Fi: Apto 1412 (OK)</div>
+            <div class="badge">● Porta: COM7</div>
+            <div class="badge b3">● B3: BBAS3 Ativa</div>
+        </div>
+    </header>
+
+    <!-- Grid de Controle -->
+    <div class="dashboard-grid">
+
+        <!-- Card 1: Rostinho OLED & Simulador de LEDs -->
+        <div class="card" style="grid-column: span 1;">
+            <div class="card-title">
+                <span>🎭 Expressões Faciais & LEDs</span>
+                <span id="currentEmotionLabel" style="font-size: 0.85rem; color: var(--accent-green);">Feliz (^ ^)</span>
+            </div>
+
+            <!-- Chassi Físico Virtual -->
+            <div class="chassis-box">
+                <div class="side-led led-green-glow" id="leftLed"></div>
+                <div class="oled-viewport">
+                    <canvas id="oledCanvas" width="256" height="128"></canvas>
+                </div>
+                <div class="side-led led-green-glow" id="rightLed"></div>
+            </div>
+
+            <!-- Seletor de Rostos -->
+            <div class="faces-grid">
+                <button class="btn-face active" onclick="setFace('happy')">
+                    <span style="font-size: 1.2rem;">😊</span> Feliz
+                </button>
+                <button class="btn-face" onclick="setFace('angry')">
+                    <span style="font-size: 1.2rem;">😠</span> Bravo
+                </button>
+                <button class="btn-face" onclick="setFace('surprised')">
+                    <span style="font-size: 1.2rem;">😲</span> Alerta
+                </button>
+                <button class="btn-face" onclick="setFace('sad')">
+                    <span style="font-size: 1.2rem;">😢</span> Triste
+                </button>
+                <button class="btn-face" onclick="setFace('sleepy')">
+                    <span style="font-size: 1.2rem;">😴</span> Sono
+                </button>
+                <button class="btn-face" onclick="setFace('love')">
+                    <span style="font-size: 1.2rem;">💖</span> Amor
+                </button>
+                <button class="btn-face" onclick="setFace('focus')">
+                    <span style="font-size: 1.2rem;">👓</span> Foco
+                </button>
+                <button class="btn-face" onclick="triggerBlink()">
+                    <span style="font-size: 1.2rem;">😉</span> Piscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Card 2: B3 - Cotação BBAS3 & Reação dos LEDs -->
+        <div class="card">
+            <div class="card-title">
+                <span>📈 Monitor B3 - BBAS3</span>
+                <button onclick="fetchStock()" style="background:#1e293b; border:1px solid #334155; color:#38bdf8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;">Atualizar 🔄</button>
+            </div>
+
+            <div class="stock-box">
+                <div>
+                    <div class="stock-ticker">BBAS3</div>
+                    <div class="stock-subtitle">Banco do Brasil S.A. (B3)</div>
+                </div>
+                <div class="stock-price-box">
+                    <div class="stock-price" id="stockPrice">R$ 28,45</div>
+                    <div class="stock-change change-up" id="stockChange">▲ +1.82% hoje</div>
+                </div>
+            </div>
+
+            <div class="stock-reactions">
+                <div>
+                    <strong>Reação dos LEDs do Robô:</strong><br>
+                    <span id="stockLedStatus" style="color: var(--accent-green);">● Se subir: LED Verde pisca + comemoração 8-bit!</span><br>
+                    <span style="color: var(--accent-red);">● Se cair: LED Vermelho pisca + rostinho triste.</span>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+                <button onclick="simulateStock(true)" style="flex:1; background:#14532d; border:1px solid #22c55e; color:#86efac; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Simular Alta (+2.4%)</button>
+                <button onclick="simulateStock(false)" style="flex:1; background:#7f1d1d; border:1px solid #ef4444; color:#fca5a5; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Simular Queda (-1.9%)</button>
+            </div>
+        </div>
+
+        <!-- Card 3: "Me Ouça" - Reconhecimento de Voz Web Speech -->
+        <div class="card">
+            <div class="card-title">
+                <span>🎙️ Me Ouça (Comando de Voz)</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Web Speech API</span>
+            </div>
+
+            <div class="voice-section">
+                <button class="btn-mic" id="micBtn" onclick="toggleListening()" title="Clique para falar com o robô">
+                    🎙️
+                </button>
+                <p id="micStatusText" style="font-size: 0.85rem; color: var(--text-muted);">
+                    Clique no microfone e fale com o robô!
+                </p>
+                <div class="voice-transcript" id="voiceTranscript">
+                    O que você falar aparecerá aqui e será enviado para o Gemini no robô...
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 4: Jukebox 8-Bits (Chiptune Synthesizer) -->
+        <div class="card">
+            <div class="card-title">
+                <span>🎶 Jukebox 8-Bits (Chiptune)</span>
+                <span style="font-size: 0.75rem; color: var(--accent-purple);">Web Audio Synth</span>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted);">
+                Toque no navegador e veja os LEDs e visor dançarem no compasso das notas:
+            </p>
+
+            <div class="music-grid">
+                <button class="btn-music" id="btnStarWarsImperial" onclick="play8Bit('imperial')">
+                    <span>⚔️</span> Star Wars: Marcha Imperial
+                </button>
+                <button class="btn-music" id="btnStarWarsMain" onclick="play8Bit('starwars_main')">
+                    <span>🚀</span> Star Wars: Tema Principal
+                </button>
+                <button class="btn-music" id="btnMario" onclick="play8Bit('mario')">
+                    <span>🍄</span> Super Mario Completo
+                </button>
+                <button class="btn-music" id="btnTetris" onclick="play8Bit('tetris')">
+                    <span>🧱</span> Tetris (Korobeiniki)
+                </button>
+                <button class="btn-music" id="btnCoin" onclick="play8Bit('coin')">
+                    <span>🪙</span> Som de Moeda / 1-Up
+                </button>
+            </div>
+        </div>
+
+        <!-- Card 5: Diagrama Oficial Protoboard de 60 Linhas (830 Pontos) -->
+        <div class="card" style="grid-column: span 1 / -1;">
+            <div class="card-title">
+                <span>🔌 Diagrama Oficial Protoboard de 60 Linhas (830 Furos)</span>
+                <span style="font-size: 0.85rem; color: var(--accent-green);">Montagem Furo a Furo (Linhas 1 a 60)</span>
+            </div>
+
+            <!-- Mapa Visual Linha a Linha da Protoboard -->
+            <div style="background: #090d16; border: 2px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                <h3 style="color: var(--accent-cyan); font-size: 1rem; margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                    📋 Mapa de Alocação das 60 Linhas da Protoboard
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-cyan); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-cyan);">🟦 LINHAS 1 A 22: ESP32-S3 DevKit</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • Encaixe a placa centralizada no canal divisor central (linhas 1 a 22).<br>
+                            • <strong>Linha 1 (Esquerda):</strong> Pino 3V3 ➔ Fio Vermelho para o trilho <strong>(+)</strong>.<br>
+                            • <strong>Linha 3 (Esquerda):</strong> GPIO 4 ➔ Jumper para Linha 33 (LED Verde).<br>
+                            • <strong>Linha 5 (Esquerda):</strong> GPIO 6 ➔ Jumper para Linha 38 (LED Vermelho).<br>
+                            • <strong>Linha 7 (Esquerda):</strong> GPIO 15 ➔ Jumper para Linha 50 (Buzzer +).<br>
+                            • <strong>Linha 11 (Esquerda):</strong> GPIO 8 (SDA) ➔ Jumper Azul para Linha 29.<br>
+                            • <strong>Linha 14 (Esquerda):</strong> GPIO 9 (SCL) ➔ Jumper Amarelo para Linha 28.<br>
+                            • <strong>Linha 21 (Esquerda):</strong> GND ➔ Fio Preto para o trilho <strong>(-)</strong>.<br>
+                            • <strong>Linha 4 (Direita):</strong> GPIO 1 ➔ Jumper Roxo para Linha 45 (Potenciômetro).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-yellow); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-yellow);">📟 LINHAS 26 A 29: Tela OLED SSD1306</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • Encaixe o módulo OLED de 4 pinos nas colunas b, c ou d:<br>
+                            • <strong>Linha 26:</strong> Pino VCC ➔ Fio Vermelho para trilho <strong>(+)</strong> (3.3V).<br>
+                            • <strong>Linha 27:</strong> Pino GND ➔ Fio Preto para trilho <strong>(-)</strong> (GND).<br>
+                            • <strong>Linha 28:</strong> Pino SCL ➔ Conectado à Linha 14 (GPIO 9 SCL).<br>
+                            • <strong>Linha 29:</strong> Pino SDA ➔ Conectado à Linha 11 (GPIO 8 SDA).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-green); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-green);">🟢 LINHAS 33 A 35: LED Verde (Alta B3 / Feliz)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 33:</strong> Resistor 220Ω (da Linha 33 até Linha 34).<br>
+                            • <strong>Linha 33:</strong> Jumper vindo da Linha 3 (GPIO 4).<br>
+                            • <strong>Linha 34:</strong> Perna longa do LED Verde (+ Ânodo).<br>
+                            • <strong>Linha 35:</strong> Perna curta do LED (- Cátodo) ➔ Fio Preto para trilho <strong>(-)</strong>.
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-red); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-red);">🔴 LINHAS 38 A 40: LED Vermelho (Queda B3 / Triste)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 38:</strong> Resistor 220Ω (da Linha 38 até Linha 39).<br>
+                            • <strong>Linha 38:</strong> Jumper vindo da Linha 5 (GPIO 6).<br>
+                            • <strong>Linha 39:</strong> Perna longa do LED Vermelho (+ Ânodo).<br>
+                            • <strong>Linha 40:</strong> Perna curta do LED (- Cátodo) ➔ Fio Preto para trilho <strong>(-)</strong>.
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid var(--accent-purple); padding: 12px; border-radius: 6px;">
+                        <strong style="color: var(--accent-purple);">🎛️ LINHAS 44 A 46: Potenciômetro (Ajuste Brilho)</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 44:</strong> Terminal 1 ➔ Fio Vermelho para trilho <strong>(+)</strong> (3.3V).<br>
+                            • <strong>Linha 45:</strong> Terminal Central (Cursor) ➔ Fio Roxo para Linha 4 (GPIO 1).<br>
+                            • <strong>Linha 46:</strong> Terminal 3 ➔ Fio Preto para trilho <strong>(-)</strong> (GND).
+                        </span>
+                    </div>
+
+                    <div style="background: #1e293b; border-left: 4px solid #fff; padding: 12px; border-radius: 6px;">
+                        <strong style="color: #fff;">🔊 LINHAS 50 A 52: Buzzer Piezoelétrico</strong><br>
+                        <span style="font-size: 0.82rem; color: #cbd5e1;">
+                            • <strong>Linha 50:</strong> Terminal Positivo (+) ➔ Fio Branco para Linha 7 (GPIO 15).<br>
+                            • <strong>Linha 52:</strong> Terminal Negativo (-) ➔ Fio Preto para trilho <strong>(-)</strong> (GND).<br>
+                            • <strong>Linhas 53 a 60:</strong> Espaço livre para expansão (microfone I2S ou servos!).
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <table class="diagram-table">
+                <thead>
+                    <tr>
+                        <th>Componente</th>
+                        <th>Faixa de Linhas na Protoboard</th>
+                        <th>Cor do Fio Típico</th>
+                        <th>Pinos no Módulo</th>
+                        <th>Conexão no ESP32-S3</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ESP32-S3 DevKitC-1</strong></td>
+                        <td>Linhas 1 a 22 (Central)</td>
+                        <td>Alimentação USB-C</td>
+                        <td>Header Esquerdo e Direito</td>
+                        <td>Placa Principal N16R8</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tela OLED 0.96"</strong></td>
+                        <td>Linhas 26 a 29</td>
+                        <td><span class="wire-dot" style="background: #ef4444;"></span>Vermelho, <span class="wire-dot" style="background: #000;"></span>Preto, <span class="wire-dot" style="background: #eab308;"></span>Amarelo, <span class="wire-dot" style="background: #38bdf8;"></span>Azul</td>
+                        <td>VCC, GND, SCL, SDA</td>
+                        <td><span class="pin-chip">3.3V</span>, <span class="pin-chip">GND</span>, <span class="pin-chip">GPIO 9</span>, <span class="pin-chip">GPIO 8</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>LED Verde (Feliz/Alta)</strong></td>
+                        <td>Linhas 33 a 35</td>
+                        <td><span class="wire-dot" style="background: #22c55e;"></span>Verde</td>
+                        <td>Ânodo c/ 220Ω, Cátodo</td>
+                        <td><span class="pin-chip">GPIO 4</span> e <span class="pin-chip">GND</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>LED Vermelho (Triste/Queda)</strong></td>
+                        <td>Linhas 38 a 40</td>
+                        <td><span class="wire-dot" style="background: #ef4444;"></span>Vermelho</td>
+                        <td>Ânodo c/ 220Ω, Cátodo</td>
+                        <td><span class="pin-chip">GPIO 6</span> e <span class="pin-chip">GND</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Potenciômetro 10k</strong></td>
+                        <td>Linhas 44 a 46</td>
+                        <td><span class="wire-dot" style="background: #a855f7;"></span>Roxo</td>
+                        <td>VCC, Centro, GND</td>
+                        <td><span class="pin-chip">GPIO 1</span> (ADC1_CH0)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Buzzer Piezoelétrico</strong></td>
+                        <td>Linhas 50 a 52</td>
+                        <td><span class="wire-dot" style="background: #fff; border:1px solid #888;"></span>Branco</td>
+                        <td>Positivo (+), Negativo (-)</td>
+                        <td><span class="pin-chip">GPIO 15</span> e <span class="pin-chip">GND</span></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 10px;">
+                ⚠️ <strong>Atenção de Segurança para o N16R8:</strong> Os pinos GPIO 26 a 37 são reservados internamente para a memória PSRAM Octal de 8MB e Flash de 16MB. Mantenha-os sempre livres.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Script de Lógica e Renderização Canvas -->
+    <script>
+        const canvas = document.getElementById('oledCanvas');
+        const ctx = canvas.getContext('2d');
+        const leftLed = document.getElementById('leftLed');
+        const rightLed = document.getElementById('rightLed');
+        const currentEmotionLabel = document.getElementById('currentEmotionLabel');
+
+        let currentFace = 'happy';
+        let isBlinking = false;
+        let lookOffset = 0;
+        let botName = "Bito";
+
+        // Nome do Robô
+        const nameInput = document.getElementById('robotNameInput');
+        nameInput.addEventListener('change', (e) => {
+            botName = e.target.value || "Bito";
+            drawOled();
+        });
+
+        // Emoções e Desenho OLED
+        function setFace(face) {
+            currentFace = face;
+            document.querySelectorAll('.btn-face').forEach(b => b.classList.remove('active'));
+            
+            // Atualiza botões
+            const mapBtn = {
+                'happy': 'Feliz (^ ^)',
+                'angry': 'Bravo (> <)',
+                'surprised': 'Alerta (o o)',
+                'sad': 'Triste (T_T)',
+                'sleepy': 'Sono (- -)',
+                'love': 'Amor (<3)',
+                'focus': 'Foco (8-bit)'
+            };
+            currentEmotionLabel.innerText = mapBtn[face] || face;
+
+            // LEDs de acordo com o humor
+            if (face === 'happy' || face === 'love') {
+                setLedColor('green');
+            } else if (face === 'sad' || face === 'angry') {
+                setLedColor('red');
+            } else if (face === 'surprised') {
+                setLedColor('yellow');
+            } else {
+                setLedColor('dim');
+            }
+
+            drawOled();
+        }
+
+        function setLedColor(color) {
+            leftLed.className = 'side-led';
+            rightLed.className = 'side-led';
+            if (color === 'green') {
+                leftLed.classList.add('led-green-glow');
+                rightLed.classList.add('led-green-glow');
+            } else if (color === 'red') {
+                leftLed.classList.add('led-red-glow');
+                rightLed.classList.add('led-red-glow');
+            } else if (color === 'yellow') {
+                leftLed.classList.add('led-yellow-glow');
+                rightLed.classList.add('led-yellow-glow');
+            }
+        }
+
+        function triggerBlink() {
+            isBlinking = true;
+            drawOled();
+            setTimeout(() => {
+                isBlinking = false;
+                drawOled();
+            }, 180);
+        }
+
+        // Renderização dos Olhos no Canvas (Simulação SSD1306 128x64 escalado x2)
+        function drawOled() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 10;
+
+            const eyeW = 48;
+            const eyeH = 68;
+            const eyeY = 22;
+            const leftX = 50 + lookOffset;
+            const rightX = 158 + lookOffset;
+
+            if (isBlinking) {
+                // Traço de piscar
+                ctx.fillRect(leftX, eyeY + 30, eyeW, 6);
+                ctx.fillRect(rightX, eyeY + 30, eyeW, 6);
+            } else if (currentFace === 'happy') {
+                // Olhos felizes em sorriso
+                roundRect(ctx, leftX, eyeY, eyeW, eyeH, 18);
+                roundRect(ctx, rightX, eyeY, eyeW, eyeH, 18);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(leftX, eyeY + eyeH - 18, eyeW, 18);
+                ctx.fillRect(rightX, eyeY + eyeH - 18, eyeW, 18);
+            } else if (currentFace === 'angry') {
+                // Olhos zangados com sobrancelha inclinada
+                roundRect(ctx, leftX, eyeY + 12, eyeW, eyeH - 12, 12);
+                roundRect(ctx, rightX, eyeY + 12, eyeW, eyeH - 12, 12);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000000';
+                // Sobrancelhas diagonais
+                ctx.beginPath();
+                ctx.moveTo(leftX, eyeY + 12);
+                ctx.lineTo(leftX + eyeW, eyeY + 32);
+                ctx.lineTo(leftX, eyeY + 32);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(rightX + eyeW, eyeY + 12);
+                ctx.lineTo(rightX, eyeY + 32);
+                ctx.lineTo(rightX + eyeW, eyeY + 32);
+                ctx.fill();
+            } else if (currentFace === 'surprised') {
+                // Olhos circulares arregalados com pupila
+                ctx.beginPath();
+                ctx.arc(leftX + eyeW/2, eyeY + eyeH/2, 28, 0, Math.PI * 2);
+                ctx.arc(rightX + eyeW/2, eyeY + eyeH/2, 28, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(leftX + eyeW/2, eyeY + eyeH/2, 10, 0, Math.PI * 2);
+                ctx.arc(rightX + eyeW/2, eyeY + eyeH/2, 10, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (currentFace === 'sad') {
+                // Olhos tristes caídos com lágrima
+                roundRect(ctx, leftX, eyeY + 14, eyeW, eyeH - 14, 14);
+                roundRect(ctx, rightX, eyeY + 14, eyeW, eyeH - 14, 14);
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000000';
+                // Máscara caída
+                ctx.beginPath();
+                ctx.moveTo(leftX, eyeY + 14);
+                ctx.lineTo(leftX + eyeW, eyeY + 30);
+                ctx.lineTo(leftX, eyeY + 30);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(rightX + eyeW, eyeY + 14);
+                ctx.lineTo(rightX, eyeY + 30);
+                ctx.lineTo(rightX + eyeW, eyeY + 30);
+                ctx.fill();
+                // Lágrima caindo
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(leftX + eyeW/2 - 3, eyeY + eyeH + 4, 6, 8);
+            } else if (currentFace === 'sleepy') {
+                // Olhos fechados com Zzz
+                ctx.fillRect(leftX, eyeY + 34, eyeW, 6);
+                ctx.fillRect(rightX, eyeY + 34, eyeW, 6);
+                ctx.font = "bold 16px monospace";
+                ctx.fillText("Z", 195, 30);
+                ctx.fillText("z", 210, 20);
+                ctx.fillText("z", 222, 12);
+            } else if (currentFace === 'love') {
+                // Corações
+                drawHeart(ctx, leftX + eyeW/2, eyeY + eyeH/2, 24);
+                drawHeart(ctx, rightX + eyeW/2, eyeY + eyeH/2, 24);
+            } else if (currentFace === 'focus') {
+                // Óculos Nerd / Foco
+                roundRect(ctx, leftX - 4, eyeY + 10, eyeW + 8, eyeH - 16, 8);
+                roundRect(ctx, rightX - 4, eyeY + 10, eyeW + 8, eyeH - 16, 8);
+                ctx.fillRect(leftX + eyeW, eyeY + 32, rightX - (leftX + eyeW), 6);
+            }
+
+            // Barra inferior de status
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '12px monospace';
+            ctx.fillText(`${botName} | BBAS3: R$ 28,45 ▲`, 16, 118);
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawHeart(ctx, x, y, size) {
+            ctx.save();
+            ctx.beginPath();
+            const topCurveHeight = size * 0.3;
+            ctx.moveTo(x, y + topCurveHeight);
+            ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+            ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 2, x, y + size);
+            ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 2, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+            ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+
+        // Piscar automático a cada 4 segundos
+        setInterval(() => {
+            if (currentFace !== 'sleepy') {
+                triggerBlink();
+            }
+        }, 4200);
+
+        // 2. Simulação de Cotação B3 (BBAS3)
+        function simulateStock(isUp) {
+            const priceEl = document.getElementById('stockPrice');
+            const changeEl = document.getElementById('stockChange');
+            const statusEl = document.getElementById('stockLedStatus');
+
+            if (isUp) {
+                priceEl.innerText = "R$ 29,12";
+                changeEl.className = "stock-change change-up";
+                changeEl.innerText = "▲ +2.35% hoje";
+                statusEl.innerHTML = "● <strong>BBAS3 SUBIU!</strong> LED Verde ativado + robô feliz!";
+                setFace('happy');
+                play8Bit('coin');
+            } else {
+                priceEl.innerText = "R$ 27,90";
+                changeEl.className = "stock-change change-down";
+                changeEl.innerText = "▼ -1.93% hoje";
+                statusEl.innerHTML = "● <strong>BBAS3 CAIU!</strong> LED Vermelho piscando + robô triste!";
+                setFace('sad');
+                play8Bit('sadBeep');
+            }
+        }
+
+        async function fetchStock() {
+            try {
+                // Consulta gratuita pública da B3 via brapi
+                const res = await fetch('https://brapi.dev/api/quote/BBAS3');
+                const data = await res.json();
+                if (data.results && data.results[0]) {
+                    const quote = data.results[0];
+                    const price = quote.regularMarketPrice;
+                    const change = quote.regularMarketChangePercent;
+                    document.getElementById('stockPrice').innerText = `R$ ${price.toFixed(2)}`;
+                    const changeEl = document.getElementById('stockChange');
+                    if (change >= 0) {
+                        changeEl.className = "stock-change change-up";
+                        changeEl.innerText = `▲ +${change.toFixed(2)}% hoje`;
+                        simulateStock(true);
+                    } else {
+                        changeEl.className = "stock-change change-down";
+                        changeEl.innerText = `▼ ${change.toFixed(2)}% hoje`;
+                        simulateStock(false);
+                    }
+                }
+            } catch (e) {
+                console.log("Fallback para simulação");
+                simulateStock(true);
+            }
+        }
+
+        // 3. Reconhecimento de Voz (Web Speech API)
+        let recognition = null;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRec();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('micBtn').classList.add('listening');
+                document.getElementById('micStatusText').innerText = "Ouvindo sua voz... Fale agora!";
+                setFace('surprised');
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                document.getElementById('voiceTranscript').innerText = `"${transcript}"`;
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                document.getElementById('micBtn').classList.remove('listening');
+                document.getElementById('micStatusText').innerText = "Voz capturada com sucesso!";
+                setFace('happy');
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                document.getElementById('micBtn').classList.remove('listening');
+                document.getElementById('micStatusText').innerText = "Erro ao capturar microfone: " + event.error;
+            };
+        } else {
+            document.getElementById('micStatusText').innerText = "Navegador não suporta Web Speech. Use Chrome ou Edge!";
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                alert("Seu navegador não suporta reconhecimento de voz direto. Experimente o Google Chrome ou Edge!");
+                return;
+            }
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        // 4. Sintetizador Web Audio API 8-Bits (Chiptune)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, durationMs, type = 'square', delayMs = 0) {
+            setTimeout(() => {
+                try {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + durationMs / 1000);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + durationMs / 1000);
+
+                    // Alterna LEDs na batida da música
+                    if (freq > 500) setLedColor('green');
+                    else setLedColor('red');
+                } catch (e) {}
+            }, delayMs);
+        }
+
+        function play8Bit(song) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (song === 'coin') {
+                playTone(987, 80, 'square', 0);
+                playTone(1318, 250, 'square', 80);
+                setTimeout(() => setLedColor('green'), 350);
+            } else if (song === 'sadBeep') {
+                playTone(440, 160, 'sawtooth', 0);
+                playTone(370, 260, 'sawtooth', 160);
+                setTimeout(() => setLedColor('red'), 450);
+            } else if (song === 'imperial') {
+                setFace('angry');
+                const notes = [
+                    {f: 440, d: 450}, {f: 440, d: 450}, {f: 440, d: 450}, {f: 349, d: 320}, {f: 523, d: 140},
+                    {f: 440, d: 450}, {f: 349, d: 320}, {f: 523, d: 140}, {f: 440, d: 650}, {f: 0, d: 150},
+                    {f: 659, d: 450}, {f: 659, d: 450}, {f: 659, d: 450}, {f: 698, d: 320}, {f: 523, d: 140},
+                    {f: 415, d: 450}, {f: 349, d: 320}, {f: 523, d: 140}, {f: 440, d: 650}, {f: 0, d: 150},
+                    {f: 880, d: 450}, {f: 440, d: 280}, {f: 440, d: 140}, {f: 880, d: 420}, {f: 831, d: 280}, {f: 784, d: 180},
+                    {f: 740, d: 120}, {f: 698, d: 120}, {f: 740, d: 240}, {f: 0, d: 200}, {f: 466, d: 240}, {f: 622, d: 380},
+                    {f: 587, d: 180}, {f: 554, d: 120}, {f: 523, d: 120}, {f: 494, d: 240}, {f: 0, d: 200}, {f: 349, d: 240},
+                    {f: 415, d: 420}, {f: 349, d: 280}, {f: 523, d: 140}, {f: 440, d: 450}, {f: 349, d: 320}, {f: 523, d: 140}, {f: 440, d: 750}
+                ];
+                let time = 0;
+                notes.forEach(n => {
+                    if (n.f > 0) playTone(n.f, n.d, 'sawtooth', time);
+                    time += n.d + 35;
+                });
+            } else if (song === 'starwars_main') {
+                setFace('happy');
+                const notes = [
+                    {f: 294, d: 150}, {f: 294, d: 150}, {f: 294, d: 150},
+                    {f: 392, d: 600}, {f: 587, d: 600},
+                    {f: 523, d: 150}, {f: 494, d: 150}, {f: 440, d: 150}, {f: 784, d: 600}, {f: 587, d: 350},
+                    {f: 523, d: 150}, {f: 494, d: 150}, {f: 440, d: 150}, {f: 784, d: 600}, {f: 587, d: 350},
+                    {f: 523, d: 150}, {f: 494, d: 150}, {f: 523, d: 150}, {f: 440, d: 600}, {f: 0, d: 200},
+                    {f: 294, d: 150}, {f: 294, d: 150}, {f: 294, d: 150},
+                    {f: 392, d: 600}, {f: 587, d: 600},
+                    {f: 523, d: 150}, {f: 494, d: 150}, {f: 440, d: 150}, {f: 784, d: 600}, {f: 587, d: 350},
+                    {f: 523, d: 150}, {f: 494, d: 150}, {f: 523, d: 150}, {f: 440, d: 600}
+                ];
+                let time = 0;
+                notes.forEach(n => {
+                    if (n.f > 0) playTone(n.f, n.d, 'square', time);
+                    time += n.d + 30;
+                });
+            } else if (song === 'mario') {
+                setFace('happy');
+                const notes = [
+                    {f: 659, d: 120}, {f: 659, d: 120}, {f: 0, d: 100}, {f: 659, d: 120}, {f: 0, d: 100}, {f: 523, d: 120}, {f: 659, d: 120},
+                    {f: 0, d: 100}, {f: 784, d: 240}, {f: 0, d: 150}, {f: 392, d: 240}, {f: 0, d: 200},
+                    {f: 523, d: 180}, {f: 0, d: 100}, {f: 392, d: 180}, {f: 0, d: 100}, {f: 330, d: 180}, {f: 0, d: 100},
+                    {f: 440, d: 180}, {f: 494, d: 180}, {f: 466, d: 120}, {f: 440, d: 180},
+                    {f: 392, d: 140}, {f: 659, d: 140}, {f: 784, d: 140}, {f: 880, d: 180}, {f: 698, d: 120}, {f: 784, d: 120},
+                    {f: 0, d: 80}, {f: 659, d: 180}, {f: 523, d: 120}, {f: 587, d: 120}, {f: 494, d: 200}
+                ];
+                let time = 0;
+                notes.forEach(n => {
+                    if (n.f > 0) playTone(n.f, n.d, 'square', time);
+                    time += n.d + 30;
+                });
+            } else if (song === 'tetris') {
+                setFace('focus');
+                const notes = [
+                    {f: 659, d: 200}, {f: 493, d: 100}, {f: 523, d: 100}, {f: 587, d: 200}, {f: 523, d: 100}, {f: 493, d: 100},
+                    {f: 440, d: 200}, {f: 440, d: 100}, {f: 523, d: 100}, {f: 659, d: 200}, {f: 587, d: 100}, {f: 523, d: 100},
+                    {f: 493, d: 250}, {f: 523, d: 100}, {f: 587, d: 200}, {f: 659, d: 200},
+                    {f: 523, d: 200}, {f: 440, d: 200}, {f: 440, d: 300}, {f: 0, d: 100},
+                    {f: 587, d: 250}, {f: 698, d: 100}, {f: 880, d: 200}, {f: 784, d: 100}, {f: 698, d: 100},
+                    {f: 659, d: 300}, {f: 523, d: 100}, {f: 659, d: 200}, {f: 587, d: 100}, {f: 523, d: 100},
+                    {f: 493, d: 200}, {f: 493, d: 100}, {f: 523, d: 100}, {f: 587, d: 200}, {f: 659, d: 200},
+                    {f: 523, d: 200}, {f: 440, d: 200}, {f: 440, d: 350}
+                ];
+                let time = 0;
+                notes.forEach(n => {
+                    if (n.f > 0) playTone(n.f, n.d, 'square', time);
+                    time += n.d + 30;
+                });
+            }
+        }
+
+        // Inicializa tela
+        drawOled();
+    </script>
+</body>
+</html>
