@@ -714,6 +714,105 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Terminal & Logs ESP32 */
+        .terminal-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .terminal-box {
+            background: #050811;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            padding: 14px;
+            height: 380px;
+            overflow-y: auto;
+            color: #e2e8f0;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+        }
+        .terminal-line {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        .terminal-time {
+            color: #64748b;
+            user-select: none;
+            min-width: 68px;
+            font-size: 0.78rem;
+        }
+        .terminal-log-esp32 {
+            color: #38bdf8;
+        }
+        .terminal-log-sent {
+            color: #facc15;
+            font-weight: bold;
+        }
+        .terminal-log-system {
+            color: #a855f7;
+        }
+        .terminal-log-error {
+            color: #ef4444;
+        }
+        .terminal-input-bar {
+            display: flex;
+            gap: 10px;
+        }
+        .terminal-input {
+            flex: 1;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: #f8fafc;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            padding: 10px 14px;
+            border-radius: 6px;
+            outline: none;
+        }
+        .terminal-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+        .btn-terminal-send {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-terminal-send:hover {
+            background: #0369a1;
+        }
+        .quick-cmd-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .quick-cmd-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .quick-cmd-btn:hover {
+            background: #334155;
+            color: #fff;
+            border-color: #38bdf8;
+        }
+
     </style>
 </head>
 <body>
@@ -742,8 +841,8 @@
         </div>
 
         <div class="badges-top">
+            <div class="badge online" id="esp32Badge">● ESP32: Conectando...</div>
             <div class="badge online">● Wi-Fi: Apto 1412 (OK)</div>
-            <div class="badge">● Porta: COM7</div>
             <div class="badge b3">● B3: BBAS3 Ativa</div>
             <div class="badge" id="hudCoinBadge" onclick="play8Bit('coin')" style="background:#451a03; color:#fef08a; border:1px solid #eab308; cursor:pointer;" title="Clique para pegar uma moeda do Mario!">
                 🪙 Moedas: <strong id="hudCoinCount">0</strong>
@@ -758,6 +857,9 @@
         </button>
         <button class="nav-tab" data-tab="jukebox" onclick="switchTab('jukebox')">
             <span>🎶</span> Jukebox 8-Bits
+        </button>
+        <button class="nav-tab" data-tab="terminal" onclick="switchTab('terminal')">
+            <span>📟</span> Terminal & Logs ESP32
         </button>
         <button class="nav-tab" data-tab="protoboard" onclick="switchTab('protoboard')">
             <span>🔌</span> Protoboard Online (60 Linhas)
@@ -915,6 +1017,59 @@
                 <div style="display:flex; gap:10px;">
                     <button onclick="simulateStock(true)" style="flex:1; background:#14532d; border:1px solid #22c55e; color:#86efac; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Simular Alta (+2.4%)</button>
                     <button onclick="simulateStock(false)" style="flex:1; background:#7f1d1d; border:1px solid #ef4444; color:#fca5a5; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold;">Simular Queda (-1.9%)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aba: Terminal & Logs ESP32 em Tempo Real -->
+    <div id="section-terminal" class="tab-pane" style="display: none;">
+        <div class="card" style="width: 100%;">
+            <div class="card-title">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.4rem;">📟</span>
+                    <div>
+                        <div style="font-weight: 800; color: var(--accent-cyan);">Terminal Serial & Logs do ESP32-S3 em Tempo Real</div>
+                        <div style="font-size: 0.78rem; color: #94a3b8; font-weight: normal;">Comunicação bidirecional direta via porta Serial (COM8) • Stream SSE sem recarregar a página</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● COM8 @ 115200</span>
+                    <button onclick="clearTerminalLogs()" style="background:#1e293b; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Limpar janela do terminal">Limpar 🗑️</button>
+                </div>
+            </div>
+
+            <div class="terminal-container">
+                <!-- Pílulas de Comandos Rápidos -->
+                <div>
+                    <div style="font-size: 0.78rem; color: #94a3b8; margin-bottom: 6px;">Comandos Rápidos para Enviar ao ESP32:</div>
+                    <div class="quick-cmd-bar">
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('senna')">🏎️ Ayrton Senna</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('imperial')">⚔️ Star Wars Marcha</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('starwars')">🚀 Star Wars Principal</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('mario')">🍄 Super Mario</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tetris')">🧱 Tetris</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('coin')">🪙 Moeda Mario</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('happy')">😊 Humor Feliz</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('angry')">😠 Humor Bravo</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('tired')">😴 Cansado</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('laugh')">😂 Risada</button>
+                        <button class="quick-cmd-btn" onclick="sendEsp32Command('bbas3')">📈 Cotação BBAS3</button>
+                    </div>
+                </div>
+
+                <!-- Janela de Visualização de Logs -->
+                <div class="terminal-box" id="terminalLogBox">
+                    <div class="terminal-line"><span class="terminal-time">--:--:--</span><span class="terminal-log-system">[SISTEMA] Conectando ao terminal de logs do ESP32 via SSE...</span></div>
+                </div>
+
+                <!-- Barra de Envio de Comando Manual -->
+                <div class="terminal-input-bar">
+                    <input type="text" class="terminal-input" id="terminalCmdInput" placeholder="Digite um comando para o ESP32 (ex: senna, mario, happy, bbas3, ou uma pergunta pro Gemini)..." onkeydown="if(event.key==='Enter') executeTerminalInput()">
+                    <button class="btn-terminal-send" onclick="executeTerminalInput()">Enviar ➔</button>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b;">
+                    💡 Dica: Qualquer texto livre digitado acima é automaticamente repassado para a IA Gemini pelo ESP32 caso não seja um comando de música ou emoção.
                 </div>
             </div>
         </div>
@@ -1503,6 +1658,7 @@
             }
 
             drawOled();
+            sendEsp32Command(face);
         }
 
         function setLedColor(color) {
@@ -1777,8 +1933,12 @@
             recognition.onend = () => {
                 isListening = false;
                 document.getElementById('micBtn').classList.remove('listening');
-                document.getElementById('micStatusText').innerText = "Voz capturada com sucesso!";
+                document.getElementById('micStatusText').innerText = "Voz capturada e enviada ao robô!";
                 setFace('happy');
+                const raw = document.getElementById('voiceTranscript').innerText.replace(/^"|"$/g, '').trim();
+                if (raw && !raw.includes('O que você falar')) {
+                    sendEsp32Command(raw);
+                }
             };
 
             recognition.onerror = (event) => {
@@ -2094,6 +2254,19 @@
             getAudioContext();
             isMusicPlaying = true;
 
+            const espSongMap = {
+                'senna': 'senna',
+                'imperial': 'imperial',
+                'starwars_main': 'starwars',
+                'mario': 'mario',
+                'tetris': 'tetris',
+                'coin': 'coin',
+                'sadBeep': 'confused'
+            };
+            if (espSongMap[song]) {
+                sendEsp32Command(espSongMap[song]);
+            }
+
             if (song === 'coin') {
                 showMarioCoinToast();
                 playTone(987, 80, 'square', 0);
@@ -2247,6 +2420,7 @@
             const sections = {
                 'robo': document.getElementById('section-robo'),
                 'jukebox': document.getElementById('section-jukebox'),
+                'terminal': document.getElementById('section-terminal'),
                 'protoboard': document.getElementById('section-protoboard'),
                 'b3': document.getElementById('section-b3')
             };
@@ -2507,6 +2681,115 @@
             } catch (e) {}
         }
 
+        // ==========================================
+        // COMUNICAÇÃO SERIAL & TERMINAL ESP32-S3
+        // ==========================================
+
+        function sendEsp32Command(cmd) {
+            if (!cmd) return;
+            fetch('/api/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cmd: cmd })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO] Falha ao enviar: ${data.error || 'Desconhecido'}`, 'error');
+                }
+            })
+            .catch(err => {
+                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO] Servidor offline ou inacessível: ${err.message}`, 'error');
+            });
+        }
+
+        function executeTerminalInput() {
+            const input = document.getElementById('terminalCmdInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+            sendEsp32Command(cmd);
+            input.value = '';
+        }
+
+        function clearTerminalLogs() {
+            const box = document.getElementById('terminalLogBox');
+            if (box) {
+                box.innerHTML = '<div class="terminal-line"><span class="terminal-time">' + new Date().toLocaleTimeString('pt-BR') + '</span><span class="terminal-log-system">[SISTEMA] Logs limpos pelo usuário.</span></div>';
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function appendTerminalLine(time, text, source) {
+            const box = document.getElementById('terminalLogBox');
+            if (!box) return;
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            
+            let colorClass = 'terminal-log-esp32';
+            if (source === 'sent' || text.startsWith('[ENVIADO]')) colorClass = 'terminal-log-sent';
+            else if (source === 'system' || text.startsWith('[SISTEMA]')) colorClass = 'terminal-log-system';
+            else if (source === 'error' || text.startsWith('[ERRO]')) colorClass = 'terminal-log-error';
+
+            line.innerHTML = `<span class="terminal-time">${time}</span><span class="${colorClass}">${escapeHtml(text)}</span>`;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function initSseLogs() {
+            if (!window.EventSource) return;
+            const evtSource = new EventSource('/api/events');
+            evtSource.onmessage = function(e) {
+                try {
+                    const data = JSON.parse(e.data);
+                    appendTerminalLine(data.time, data.text, data.source);
+                } catch (err) {
+                    console.error('Erro ao processar SSE log:', err);
+                }
+            };
+            evtSource.onerror = function() {
+                // Reconexão automática pelo navegador
+            };
+        }
+
+        function checkEsp32Status() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    const esp32Badge = document.getElementById('esp32Badge');
+                    const terminalBadge = document.getElementById('terminalStatusBadge');
+                    if (data.connected) {
+                        if (esp32Badge) {
+                            esp32Badge.className = 'badge online';
+                            esp32Badge.innerText = `● ESP32: Conectado (${data.port || 'COM8'})`;
+                        }
+                        if (terminalBadge) {
+                            terminalBadge.style.borderColor = '#22c55e';
+                            terminalBadge.style.color = '#86efac';
+                            terminalBadge.style.background = '#064e3b';
+                            terminalBadge.innerText = `● Conectado (${data.port || 'COM8'} @ ${data.baudRate})`;
+                        }
+                    } else {
+                        if (esp32Badge) {
+                            esp32Badge.className = 'badge';
+                            esp32Badge.style.background = '#3f1515';
+                            esp32Badge.style.borderColor = '#ef4444';
+                            esp32Badge.style.color = '#fca5a5';
+                            esp32Badge.innerText = `● ESP32: Desconectado`;
+                        }
+                        if (terminalBadge) {
+                            terminalBadge.style.borderColor = '#ef4444';
+                            terminalBadge.style.color = '#fca5a5';
+                            terminalBadge.style.background = '#450a0a';
+                            terminalBadge.innerText = `● Desconectado (Procurando...)`;
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+
         // Inicialização dos Furos, Abas e Checklist
         renderBreadboardGrid();
         loadStepProgress();
@@ -2515,8 +2798,11 @@
             switchTab(savedTab);
         }
 
-        // Inicializa tela
+        // Inicializa tela e comunicação com ESP32
         drawOled();
+        initSseLogs();
+        checkEsp32Status();
+        setInterval(checkEsp32Status, 3000);
     </script>
 </body>
 </html>
