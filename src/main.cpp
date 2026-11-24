@@ -60,6 +60,30 @@ void setLedsColor(uint8_t r, uint8_t g, uint8_t b, uint8_t scale = 255) {
     rgbLedWrite(RGB_BUILTIN, (r * scale) / 255, (g * scale) / 255, (b * scale) / 255);
 }
 
+// Desliga todos os LEDs da placa e externos
+void ledsOff() {
+    setLedsColor(0, 0, 0, 0);
+    analogWrite(PIN_LED_VERDE, 0);
+    analogWrite(PIN_LED_AMARELO, 0);
+    analogWrite(PIN_LED_VERMELHO, 0);
+    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
+}
+
+// ----------------------------------------------------
+// Controle Direto de Áudio por Hardware LEDC (Buzzer Piezo)
+// ----------------------------------------------------
+void buzzerTone(unsigned int freq) {
+    if (freq > 0) {
+        ledcWriteTone(PIN_BUZZER, freq);
+    } else {
+        ledcWrite(PIN_BUZZER, 0);
+    }
+}
+
+void buzzerNoTone() {
+    ledcWrite(PIN_BUZZER, 0);
+}
+
 // 3 Piscadas Verdes: Wi-Fi Conectado com sucesso
 void blinkWifiConnected() {
     Serial.println("[LED ESP32] 3 Piscadas Verdes: Wi-Fi Conectado!");
@@ -131,7 +155,7 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
         }
 
         if (pitch > 0) {
-            tone(PIN_BUZZER, pitch, duration);
+            buzzerTone(pitch);
 
             if (theme == THEME_SENNA) {
                 // Alterna LEDs em Verde e Amarelo (Cores do Brasil e do Capacete do Ayrton Senna!)
@@ -152,8 +176,8 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
                 setLedsColor(255, 0, 0, brightness);
             }
         } else {
-            noTone(PIN_BUZZER);
-            setLedsColor(0, 0, 0, 0);
+            buzzerNoTone();
+            ledsOff();
         }
 
         int elapsed = 0;
@@ -166,11 +190,12 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
             }
         }
 
-        noTone(PIN_BUZZER);
-        setLedsColor(0, 0, 0, 0);
+        buzzerNoTone();
+        ledsOff();
         delay(25); // Breve pausa entre as notas
     }
-    noTone(PIN_BUZZER);
+    buzzerNoTone();
+    ledsOff(); // Garante que tudo apaga ao final da música
     showingText = false; // Retorna aos olhinhos orgânicos do RoboEyes
     roboEyes.update();
 }
@@ -187,7 +212,7 @@ void notifyMarioCoin() {
     roboEyes.setMood(HAPPY);
 
     // Primeiro tom agudo (B5) com brilho dourado nos LEDs
-    tone(PIN_BUZZER, NOTE_B5, 75);
+    buzzerTone(NOTE_B5);
     analogWrite(PIN_LED_VERDE, 255);
     rgbLedWrite(RGB_BUILTIN, 255, 215, 0); // Dourado brilhante no ESP32
 
@@ -197,7 +222,7 @@ void notifyMarioCoin() {
     }
 
     // Segundo tom (E6) no ápice do pulo com brilho verde
-    tone(PIN_BUZZER, NOTE_E6, 260);
+    buzzerTone(NOTE_E6);
     analogWrite(PIN_LED_VERDE, 200);
     rgbLedWrite(RGB_BUILTIN, 50, 255, 100);
 
@@ -206,9 +231,8 @@ void notifyMarioCoin() {
         delay(28);
     }
 
-    noTone(PIN_BUZZER);
-    analogWrite(PIN_LED_VERDE, 0);
-    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
+    buzzerNoTone();
+    ledsOff();
 }
 
 void play8BitCoin() {
@@ -265,15 +289,14 @@ void updateStockBBAS3() {
     if (bbas3Change >= 0) {
         roboEyes.setMood(HAPPY);
         roboEyes.anim_laugh();
-        flashLeds(3, 80, true);
         play8BitCoin();
     } else {
         roboEyes.setMood(TIRED);
         roboEyes.setSweat(ON);
-        flashLeds(3, 80, false);
-        tone(PIN_BUZZER, NOTE_FS4, 300);
+        buzzerTone(NOTE_FS4);
         delay(300);
-        noTone(PIN_BUZZER);
+        buzzerNoTone();
+        ledsOff();
     }
 
     showingText = true;
@@ -294,9 +317,9 @@ void askGemini(String userQuery) {
     Serial.println("\n[Gemini] Enviando pergunta: " + userQuery);
     
     roboEyes.anim_confused();
-    tone(PIN_BUZZER, NOTE_A5, 60);
+    buzzerTone(NOTE_A5);
     delay(60);
-    noTone(PIN_BUZZER);
+    buzzerNoTone();
 
     WiFiClientSecure client;
     client.setInsecure();
@@ -321,7 +344,6 @@ void askGemini(String userQuery) {
 
         int httpCode = https.POST(reqBody);
         if (httpCode == HTTP_CODE_OK) {
-            blinkApiOk(); // 1 piscada azul: API IA respondeu com sucesso!
             String respStr = https.getString();
             JsonDocument docResp;
             if (!deserializeJson(docResp, respStr)) {
@@ -334,11 +356,12 @@ void askGemini(String userQuery) {
                     if (fullReply.indexOf("[ANGRY]") >= 0) {
                         roboEyes.setMood(ANGRY);
                         fullReply.replace("[ANGRY]", "");
-                        playSong(SONG_IMPERIAL_MARCH, 18, THEME_STAR_WARS_IMPERIAL); // Toca trecho da marcha imperial
+                        playSong(SONG_IMPERIAL_MARCH, 18, THEME_STAR_WARS_IMPERIAL);
                     } else if (fullReply.indexOf("[TIRED]") >= 0) {
                         roboEyes.setMood(TIRED);
                         fullReply.replace("[TIRED]", "");
-                        tone(PIN_BUZZER, NOTE_FS4, 250); delay(250); noTone(PIN_BUZZER);
+                        buzzerTone(NOTE_FS4); delay(250); buzzerNoTone();
+                        ledsOff();
                     } else if (fullReply.indexOf("[HAPPY]") >= 0) {
                         roboEyes.setMood(HAPPY);
                         roboEyes.anim_laugh();
@@ -372,58 +395,16 @@ void askGemini(String userQuery) {
 }
 
 // ----------------------------------------------------
-// Pulsação das Lâmpadas de LED Conforme o Sentimento
+// Pulsação das Lâmpadas de LED (Somente durante música)
 // ----------------------------------------------------
 void updatePulsingLeds() {
-    if (showingText) return; // Não interfere durante reprodução de texto/notificações
-
-    unsigned long now = millis();
-    int potValue = analogRead(PIN_POTENCIOMETRO);
-    uint8_t maxBrightness = map(potValue, 0, 4095, 25, 255);
-
-    float pulse = 0.0f;
-    uint8_t r = 0, g = 0, b = 0;
-
-    if (roboEyes.happy) {
-        // FELIZ (^ ^): Pulso respiratório suave e alegre em Verde Esmeralda (~1.3s)
-        float wave = (sin(now * 0.0048f) + 1.0f) * 0.5f;
-        pulse = 0.25f + 0.75f * wave;
-        r = 0;
-        g = 255;
-        b = 30;
-    }
-    else if (roboEyes.angry) {
-        // BRAVO (> <): Pulso tenso e acelerado em Vermelho Vivo (~0.5s) com pico agressivo
-        float wave = (sin(now * 0.0125f) + 1.0f) * 0.5f;
-        pulse = 0.20f + 0.80f * (wave * wave);
-        r = 255;
-        g = 0;
-        b = 0;
-    }
-    else if (roboEyes.tired) {
-        // CANSADO / TRISTE (T_T): Respiração lenta, suave e fading em Âmbar/Vermelho (~3.5s)
-        float wave = (sin(now * 0.0018f) + 1.0f) * 0.5f;
-        pulse = 0.10f + 0.55f * wave;
-        r = 230;
-        g = 40;
-        b = 0;
-    }
-    else {
-        // NORMAL / CURIOSO (o o): Pulso calmo e rítmico em Ciano Zen (~2.3s)
-        float wave = (sin(now * 0.0028f) + 1.0f) * 0.5f;
-        pulse = 0.20f + 0.80f * wave;
-        r = 0;
-        g = 180;
-        b = 230;
-    }
-
-    uint8_t scaledBrightness = (uint8_t)(maxBrightness * pulse);
-    setLedsColor(r, g, b, scaledBrightness);
+    // LEDs desligados por padrão fora das músicas
+    ledsOff();
 }
 
 void setup() {
     Serial.begin(115200);
-    delay(800);
+    delay(400);
     Serial.println("\n==============================================");
     Serial.println("  🤖 Dollynho Toy: Músicas 8-Bits + Star Wars ");
     Serial.println("==============================================");
@@ -431,11 +412,19 @@ void setup() {
     pinMode(PIN_LED_VERDE, OUTPUT);
     pinMode(PIN_LED_AMARELO, OUTPUT);
     pinMode(PIN_LED_VERMELHO, OUTPUT);
-    pinMode(PIN_BUZZER, OUTPUT);
     pinMode(PIN_POTENCIOMETRO, INPUT);
 
+    // Desliga IMEDIATAMENTE os LEDs da placa e externos
+    ledsOff();
+
+    // Inicialização direta do buzzer no GPIO 15 via hardware LEDC
+    ledcAttach(PIN_BUZZER, 2000, 10);
+    buzzerNoTone();
+
     Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
-    display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
+    }
 
     // Inicialização do RoboEyes
     roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 50);
@@ -447,36 +436,37 @@ void setup() {
     roboEyes.setAutoblinker(ON, 3, 2);
     roboEyes.setIdleMode(ON, 2, 2);
 
-    setLedsColor(0, 255, 0);
-    play8BitCoin();
+    // Modo Wi-Fi Híbrido: Conecta no Roteador (STA) e cria Rede Própria (AP)
+    WiFi.mode(WIFI_AP_STA);
+    WiFi.softAP("Dollynho-Toy", "12345678");
+    Serial.println("[Wi-Fi AP] Ponto de Acesso criado: 'Dollynho-Toy' (Senha: 12345678)");
+    Serial.println("[Wi-Fi AP] IP direto do Robô: " + WiFi.softAPIP().toString());
 
-    // Conexão Wi-Fi
-    WiFi.mode(WIFI_STA);
+    // Conexão Wi-Fi Local
     WiFi.begin(WIFI_SSID, WIFI_PASS);
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-        delay(350);
+    while (WiFi.status() != WL_CONNECTED && attempts < 15) {
+        delay(300);
         attempts++;
         roboEyes.update();
     }
 
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("[Wi-Fi] Conectado! IP: " + WiFi.localIP().toString());
-        blinkWifiConnected(); // 3 piscadas verdes no LED do ESP32!
+        Serial.println("[Wi-Fi Local] Conectado! IP: " + WiFi.localIP().toString());
         roboEyes.setMood(HAPPY);
-        roboEyes.anim_laugh();
     } else {
-        Serial.println("[Wi-Fi] Modo Offline");
-        roboEyes.setMood(TIRED);
+        Serial.println("[Wi-Fi Local] Modo Offline (Use o Wi-Fi direto 'Dollynho-Toy')");
+        roboEyes.setMood(DEFAULT);
     }
+
+    // Garante LEDs 100% desligados
+    ledsOff();
 }
 
 void loop() {
     unsigned long now = millis();
 
-    // Atualiza a pulsação contínua dos LEDs conforme o sentimento
-    updatePulsingLeds();
-
+    // LEDs ficam desligados quando nenhuma música estiver tocando
     if (showingText) {
         if (now - textStartTime > textDuration) {
             showingText = false;
@@ -497,11 +487,11 @@ void loop() {
         cmd.trim();
 
         if (cmd == "1" || cmd == "happy") { roboEyes.setMood(HAPPY); play8BitCoin(); }
-        else if (cmd == "2" || cmd == "angry") { roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH); }
-        else if (cmd == "3" || cmd == "tired") { roboEyes.setMood(TIRED); tone(PIN_BUZZER, NOTE_FS4, 250); delay(250); noTone(PIN_BUZZER); }
-        else if (cmd == "4" || cmd == "default") { roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); }
+        else if (cmd == "2" || cmd == "angry") { roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL); }
+        else if (cmd == "3" || cmd == "tired") { roboEyes.setMood(TIRED); buzzerTone(NOTE_FS4); delay(250); buzzerNoTone(); ledsOff(); }
+        else if (cmd == "4" || cmd == "default") { roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); ledsOff(); }
         else if (cmd == "laugh") { roboEyes.anim_laugh(); play8BitCoin(); }
-        else if (cmd == "confused") { roboEyes.anim_confused(); tone(PIN_BUZZER, NOTE_A5, 80); delay(80); noTone(PIN_BUZZER); }
+        else if (cmd == "confused") { roboEyes.anim_confused(); buzzerTone(NOTE_A5); delay(80); buzzerNoTone(); ledsOff(); }
         else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
         else if (cmd == "coin" || cmd == "moeda") { notifyMarioCoin(); }
         
