@@ -2,8 +2,12 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bito - Painel de Controle do Robô Assistente ESP32-S3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dollynho Toy">
+    <meta name="theme-color" content="#0a0f1d">
+    <title>Dollynho Toy - App Móvel do Robô Assistente</title>
     <style>
         :root {
             --bg-dark: #0a0f1d;
@@ -813,9 +817,257 @@
             border-color: #38bdf8;
         }
 
+        /* Mobile App Bottom Bar */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 15, 29, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid var(--card-border);
+            padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.7);
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-nav-item:active {
+            transform: scale(0.9);
+        }
+
+        .mobile-nav-item.active {
+            color: var(--accent-cyan);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .mobile-nav-item span.icon {
+            font-size: 1.35rem;
+        }
+
+        /* PIN Lock Screen Modal (Glassmorphism PWA Style - Senha 3635) */
+        .pin-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 15, 29, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .pin-modal-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .pin-box {
+            background: #131d31;
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px 24px;
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(56, 189, 248, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 16px;
+            margin: 10px 0 12px 0;
+        }
+
+        .pin-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-cyan);
+            background: transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .pin-dot.filled {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 14px var(--accent-cyan);
+            transform: scale(1.15);
+        }
+
+        .pin-dot.error {
+            border-color: var(--accent-red);
+            background: var(--accent-red);
+            box-shadow: 0 0 14px var(--accent-red);
+        }
+
+        @keyframes pinShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 270px;
+        }
+
+        .pin-key {
+            background: #1e293b;
+            border: 1px solid var(--card-border);
+            color: #fff;
+            font-size: 1.45rem;
+            font-weight: 700;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .pin-key:active {
+            background: var(--accent-cyan);
+            color: #0a0f1d;
+            transform: scale(0.92);
+        }
+
+        .pin-key.func {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            background: #0f172a;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 12px 12px calc(80px + env(safe-area-inset-bottom)) 12px;
+            }
+            .nav-tabs {
+                display: none; /* Em mobile, usa a barra inferior nativa! */
+            }
+            .mobile-bottom-nav {
+                display: flex;
+            }
+            .chassis-box {
+                padding: 14px 10px;
+                gap: 10px;
+                border-radius: 20px;
+            }
+            .side-led {
+                width: 16px;
+                height: 16px;
+            }
+            .oled-viewport {
+                width: 220px;
+                height: 110px;
+            }
+            .oled-viewport canvas {
+                width: 100%;
+                height: 100%;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+            }
+            .card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+            .faces-grid {
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 8px;
+            }
+            .btn-face {
+                padding: 10px 4px;
+                font-size: 0.75rem;
+            }
+            .music-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
+            }
+        }
+
     </style>
 </head>
 <body>
+
+    <!-- Modal de Autenticação / Tela de Bloqueio PIN (Senha: 3635) -->
+    <div id="pinLockModal" class="pin-modal-overlay">
+        <div class="pin-box">
+            <div style="font-size: 2.8rem; background: #1e293b; border: 2px solid var(--accent-cyan); border-radius: 20px; padding: 10px 18px; box-shadow: 0 0 25px rgba(56, 189, 248, 0.4); display: inline-block;">
+                🧃
+            </div>
+            <div>
+                <h2 style="font-size: 1.4rem; color: #fff; margin-bottom: 4px;">Dollynho Toy App</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Digite a senha de 4 dígitos para acessar:</p>
+            </div>
+
+            <!-- Indicadores dos 4 dígitos -->
+            <div class="pin-dots" id="pinDots">
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+                <span class="pin-dot"></span>
+            </div>
+
+            <div id="pinErrorMessage" style="font-size: 0.82rem; color: #f87171; height: 18px; font-weight: 600;"></div>
+
+            <!-- Teclado Numérico Touch -->
+            <div class="pin-keypad">
+                <button type="button" class="pin-key" onclick="pressPinDigit('1')">1</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('2')">2</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('3')">3</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('4')">4</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('5')">5</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('6')">6</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('7')">7</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('8')">8</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('9')">9</button>
+                <button type="button" class="pin-key func" onclick="clearPin()">✕ Limpar</button>
+                <button type="button" class="pin-key" onclick="pressPinDigit('0')">0</button>
+                <button type="button" class="pin-key func" onclick="deletePinDigit()">⌫</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Toast de Notificação Moeda do Mario -->
     <div id="marioCoinToast" class="mario-coin-toast">
@@ -854,6 +1106,7 @@
         </div>
 
         <div class="badges-top">
+            <div class="badge" id="pinLockBadge" onclick="lockApp()" style="cursor:pointer; background:#1e293b; border-color:#38bdf8; color:#38bdf8;" title="Clique para bloquear o aplicativo com a senha 3635">🔒 PIN: 3635</div>
             <div class="badge online" id="esp32Badge">● Modo Nuvem Wi-Fi: Ativo</div>
             <div class="badge online">● Wi-Fi: Dollynho-Toy (AP)</div>
             <div class="badge b3">● B3: BBAS3 Ativa</div>
@@ -2704,7 +2957,6 @@
                 });
                 startSongVisual('takeonme', 'A-HA: TAKE ON ME 1985', time);
                 setTimeout(() => { isMusicPlaying = false; setLedColor('off'); }, time + 200);
-            }
             } else if (song === 'sadBeep') {
                 playTone(440, 160, 'sawtooth', 0);
                 playTone(370, 260, 'sawtooth', 160);
@@ -2847,6 +3099,12 @@
             document.querySelectorAll('.nav-tab').forEach(btn => {
                 btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
             });
+            document.querySelectorAll('.mobile-nav-item').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+            });
+            if (window.navigator && window.navigator.vibrate) {
+                try { window.navigator.vibrate(25); } catch (e) {}
+            }
             const sections = {
                 'robo': document.getElementById('section-robo'),
                 'jukebox': document.getElementById('section-jukebox'),
@@ -2860,6 +3118,9 @@
                 Object.entries(sections).forEach(([key, s]) => {
                     if (s) s.style.display = (key === tabId) ? 'block' : 'none';
                 });
+            }
+            if (tabId === 'robo' && typeof drawOled === 'function') {
+                setTimeout(drawOled, 50);
             }
             localStorage.setItem('dollynho_tab', tabId);
         }
@@ -3279,7 +3540,6 @@
                 });
             }
         }
-        }
 
         function executeTerminalInput() {
             const input = document.getElementById('terminalCmdInput');
@@ -3426,7 +3686,119 @@
             });
         }
 
-        // Inicialização dos Furos, Abas e Checklist
+        // ==========================================
+        // SISTEMA DE SEGURANÇA PIN (SENHA: 3635)
+        // ==========================================
+        const CORRECT_PIN = '3635';
+        let currentPin = '';
+
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('dollynho_auth');
+            const modal = document.getElementById('pinLockModal');
+            if (!modal) return;
+            if (isAuth === 'granted') {
+                modal.classList.add('hidden');
+            } else {
+                modal.classList.remove('hidden');
+                currentPin = '';
+                updatePinDots();
+            }
+        }
+
+        function lockApp() {
+            sessionStorage.removeItem('dollynho_auth');
+            checkAuth();
+            if (window.navigator && window.navigator.vibrate) {
+                try { window.navigator.vibrate(30); } catch(e){}
+            }
+        }
+
+        function pressPinDigit(digit) {
+            if (currentPin.length >= 4) return;
+            currentPin += String(digit);
+            if (window.navigator && window.navigator.vibrate) {
+                try { window.navigator.vibrate(20); } catch(e){}
+            }
+            updatePinDots();
+            if (currentPin.length === 4) {
+                setTimeout(verifyPin, 120);
+            }
+        }
+
+        function deletePinDigit() {
+            if (currentPin.length > 0) {
+                currentPin = currentPin.slice(0, -1);
+                updatePinDots();
+            }
+        }
+
+        function clearPin() {
+            currentPin = '';
+            updatePinDots();
+            const err = document.getElementById('pinErrorMessage');
+            if (err) err.innerText = '';
+        }
+
+        function updatePinDots(isError = false) {
+            const dots = document.querySelectorAll('#pinDots .pin-dot');
+            dots.forEach((dot, index) => {
+                if (isError) {
+                    dot.classList.add('error');
+                } else {
+                    dot.classList.remove('error');
+                    if (index < currentPin.length) {
+                        dot.classList.add('filled');
+                    } else {
+                        dot.classList.remove('filled');
+                    }
+                }
+            });
+        }
+
+        function verifyPin() {
+            const err = document.getElementById('pinErrorMessage');
+            if (currentPin === CORRECT_PIN) {
+                if (window.navigator && window.navigator.vibrate) {
+                    try { window.navigator.vibrate([40, 60, 80]); } catch(e){}
+                }
+                sessionStorage.setItem('dollynho_auth', 'granted');
+                const modal = document.getElementById('pinLockModal');
+                if (modal) modal.classList.add('hidden');
+                if (err) err.innerText = '';
+                currentPin = '';
+                updatePinDots();
+            } else {
+                if (window.navigator && window.navigator.vibrate) {
+                    try { window.navigator.vibrate([80, 50, 80]); } catch(e){}
+                }
+                if (err) err.innerText = 'Senha incorreta! Digite 3635.';
+                updatePinDots(true);
+                const dots = document.getElementById('pinDots');
+                if (dots) {
+                    dots.style.animation = 'pinShake 0.4s ease';
+                    setTimeout(() => { dots.style.animation = ''; }, 400);
+                }
+                setTimeout(() => {
+                    clearPin();
+                }, 600);
+            }
+        }
+
+        // Suporte a teclado físico
+        window.addEventListener('keydown', (e) => {
+            const modal = document.getElementById('pinLockModal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (e.key >= '0' && e.key <= '9') {
+                pressPinDigit(e.key);
+            } else if (e.key === 'Backspace') {
+                deletePinDigit();
+            } else if (e.key === 'Escape') {
+                clearPin();
+            }
+        });
+
+        // Inicialização de Autenticação, Furos, Abas e Checklist
+        checkAuth();
         renderBreadboardGrid();
         loadStepProgress();
         const savedTab = localStorage.getItem('dollynho_tab');
@@ -3447,5 +3819,29 @@
             }
         }, 1000);
     </script>
+
+    <!-- Barra de Navegação Inferior Nativa Mobile (PWA Bottom Nav) -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <button class="mobile-nav-item active" data-tab="robo" onclick="switchTab('robo')">
+            <span class="icon">🧃</span>
+            <span>Robô</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="jukebox" onclick="switchTab('jukebox')">
+            <span class="icon">🎶</span>
+            <span>Jukebox</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="b3" onclick="switchTab('b3')">
+            <span class="icon">📈</span>
+            <span>Bolsa</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="terminal" onclick="switchTab('terminal')">
+            <span class="icon">📟</span>
+            <span>Terminal</span>
+        </button>
+        <button class="mobile-nav-item" data-tab="protoboard" onclick="switchTab('protoboard')">
+            <span class="icon">🔌</span>
+            <span>Circuito</span>
+        </button>
+    </nav>
 </body>
 </html>
