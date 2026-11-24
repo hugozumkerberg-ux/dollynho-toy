@@ -487,20 +487,25 @@ void askGemini(String userQuery) {
                     Serial.println("\n[Dollynho]: " + fullReply);
 
                     if (fullReply.indexOf("[ANGRY]") >= 0) {
+                        currentMoodStr = "ANGRY";
                         roboEyes.setMood(ANGRY);
+                        roboEyes.setSweat(OFF);
                         fullReply.replace("[ANGRY]", "");
-                        playSong(SONG_IMPERIAL_MARCH, 18, THEME_STAR_WARS_IMPERIAL);
+                        buzzerTone(135); delay(100); buzzerTone(90); delay(130); buzzerNoTone();
                     } else if (fullReply.indexOf("[TIRED]") >= 0) {
+                        currentMoodStr = "TIRED";
                         roboEyes.setMood(TIRED);
                         fullReply.replace("[TIRED]", "");
                         buzzerTone(NOTE_FS4); delay(250); buzzerNoTone();
                         ledsOff();
                     } else if (fullReply.indexOf("[HAPPY]") >= 0) {
+                        currentMoodStr = "HAPPY";
                         roboEyes.setMood(HAPPY);
                         roboEyes.anim_laugh();
                         fullReply.replace("[HAPPY]", "");
                         play8BitCoin();
                     } else {
+                        currentMoodStr = "DEFAULT";
                         roboEyes.setMood(DEFAULT);
                         fullReply.replace("[DEFAULT]", "");
                         play8BitCoin();
@@ -546,16 +551,119 @@ void executeRobotCommand(String cmd) {
             Serial.printf("[Relógio] Hora atualizada: %s\n", manualTimeStr);
         }
     }
-    else if (cmd == "1" || cmd == "happy") { currentMoodStr = "HAPPY"; roboEyes.setMood(HAPPY); play8BitCoin(); }
-    else if (cmd == "2" || cmd == "angry") { currentMoodStr = "ANGRY"; roboEyes.setMood(ANGRY); playSong(SONG_IMPERIAL_MARCH, LEN_IMPERIAL_MARCH, THEME_STAR_WARS_IMPERIAL); }
-    else if (cmd == "3" || cmd == "tired") { currentMoodStr = "TIRED"; roboEyes.setMood(TIRED); buzzerTone(NOTE_FS4); delay(250); buzzerNoTone(); ledsOff(); }
-    else if (cmd == "4" || cmd == "default") { currentMoodStr = "DEFAULT"; roboEyes.setMood(DEFAULT); roboEyes.setSweat(OFF); ledsOff(); }
-    else if (cmd == "laugh") { roboEyes.anim_laugh(); play8BitCoin(); }
-    else if (cmd == "confused") { roboEyes.anim_confused(); buzzerTone(NOTE_A5); delay(80); buzzerNoTone(); ledsOff(); }
-    else if (cmd == "bbas3" || cmd == "bolsa") { updateStockBBAS3(); }
-    else if (cmd == "coin" || cmd == "moeda") { notifyMarioCoin(); }
-    
-    // MÚSICAS COMPLETAS COM ANIMAÇÃO VISUAL
+    // -------------------------------------------------------------------------
+    // 1. EXPRESSÕES FACIAIS E HUMORES (Sem músicas longas bloqueantes!)
+    // -------------------------------------------------------------------------
+    else if (cmd == "1" || cmd == "happy" || cmd == "feliz") {
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(ON);
+        play8BitCoin();
+    }
+    else if (cmd == "2" || cmd == "angry" || cmd == "bravo") {
+        currentMoodStr = "ANGRY";
+        roboEyes.setMood(ANGRY);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(OFF);
+        // Rosnado rápido de robô irritado (apenas 220ms, NUNCA toca a Marcha Imperial!)
+        buzzerTone(140);
+        analogWrite(PIN_LED_VERMELHO, 255);
+        delay(100);
+        buzzerTone(90);
+        delay(120);
+        buzzerNoTone();
+        analogWrite(PIN_LED_VERMELHO, 0);
+    }
+    else if (cmd == "3" || cmd == "tired" || cmd == "sleepy" || cmd == "sono" || cmd == "cansado") {
+        currentMoodStr = "TIRED";
+        roboEyes.setMood(TIRED);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(OFF);
+        buzzerTone(NOTE_FS4);
+        delay(200);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "sad" || cmd == "triste") {
+        currentMoodStr = "TIRED";
+        roboEyes.setMood(TIRED);
+        roboEyes.setSweat(ON); // Ativa gota de suor/lágrima animada na testa!
+        buzzerTone(NOTE_D4);
+        analogWrite(PIN_LED_VERMELHO, 120);
+        delay(140);
+        buzzerTone(NOTE_C4);
+        delay(220);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "surprised" || cmd == "alerta" || cmd == "surpreso") {
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(ON);
+        roboEyes.anim_confused();
+        buzzerTone(NOTE_E6);
+        analogWrite(PIN_LED_AMARELO, 255);
+        delay(90);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "love" || cmd == "amor") {
+        currentMoodStr = "HAPPY";
+        roboEyes.setMood(HAPPY);
+        roboEyes.setSweat(OFF);
+        roboEyes.anim_laugh();
+        analogWrite(PIN_LED_VERMELHO, 255);
+        analogWrite(PIN_LED_VERDE, 70);
+        buzzerTone(NOTE_C6);
+        delay(90);
+        buzzerTone(NOTE_G6);
+        delay(160);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "focus" || cmd == "foco") {
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(OFF);
+        buzzerTone(NOTE_A5);
+        delay(60);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "blink" || cmd == "piscar") {
+        roboEyes.blink();
+    }
+    else if (cmd == "laugh" || cmd == "risada") {
+        currentMoodStr = "HAPPY";
+        roboEyes.anim_laugh();
+        play8BitCoin();
+    }
+    else if (cmd == "confused" || cmd == "confuso") {
+        roboEyes.anim_confused();
+        buzzerTone(NOTE_A5);
+        delay(80);
+        buzzerNoTone();
+        ledsOff();
+    }
+    else if (cmd == "4" || cmd == "default" || cmd == "normal") {
+        currentMoodStr = "DEFAULT";
+        roboEyes.setMood(DEFAULT);
+        roboEyes.setSweat(OFF);
+        roboEyes.setCuriosity(ON);
+        ledsOff();
+    }
+    else if (cmd == "bbas3" || cmd == "bolsa") {
+        updateStockBBAS3();
+    }
+    else if (cmd == "coin" || cmd == "moeda") {
+        notifyMarioCoin();
+    }
+    // -------------------------------------------------------------------------
+    // 2. MÚSICAS COMPLETAS E RETRÔ 8-BITS (Somente quando o usuário pede música!)
+    // -------------------------------------------------------------------------
     else if (cmd == "starwars" || cmd == "sw" || cmd == "starwars_main") {
         Serial.println("[Música] Tocando Star Wars: Tema Principal + Logo no OLED!");
         currentMoodStr = "HAPPY";
@@ -626,51 +734,47 @@ void executeRobotCommand(String cmd) {
 }
 
 // ----------------------------------------------------
-// Polling da Fila Remota na Nuvem Hostinger
-// Consulta a API e executa comandos pendentes enviados via Web
+// Tarefa FreeRTOS no Core 0: Polling da Fila Remota na Nuvem Hostinger
+// Roda em segundo plano no Core 0 sem nunca travar os olhos/FPS no Core 1!
 // ----------------------------------------------------
-unsigned long lastCloudPoll = 0;
-const unsigned long CLOUD_POLL_INTERVAL = 1800; // a cada 1.8 segundos
+static volatile bool pendingCloudCmd = false;
+static char cloudCmdBuffer[64] = "";
+static portMUX_TYPE cloudMux = portMUX_INITIALIZER_UNLOCKED;
 
-void checkRemoteCloudApi() {
-    if (WiFi.status() != WL_CONNECTED) return;
-    if (showingText) return;
+void cloudPollingTask(void* pvParameters) {
+    Serial.println("[FreeRTOS Core 0] Polling de Nuvem iniciado com sucesso!");
+    for (;;) {
+        vTaskDelay(pdMS_TO_TICKS(1500)); // Espera 1.5s entre requisições
 
-    unsigned long now = millis();
-    if (now - lastCloudPoll < CLOUD_POLL_INTERVAL) return;
-    lastCloudPoll = now;
+        if (WiFi.status() == WL_CONNECTED && !showingText) {
+            WiFiClientSecure client;
+            client.setInsecure();
+            HTTPClient https;
+            https.setTimeout(2200);
 
-    WiFiClientSecure client;
-    client.setInsecure();
-    HTTPClient https;
-    https.setTimeout(2200);
+            String url = String(CLOUD_API_URL) + "?action=poll&auto_ack=1&ip=" + WiFi.localIP().toString() +
+                         "&rssi=" + String(WiFi.RSSI()) + "&mood=" + currentMoodStr;
 
-    String url = String(CLOUD_API_URL) + "?action=poll&auto_ack=1&ip=" + WiFi.localIP().toString() +
-                 "&rssi=" + String(WiFi.RSSI()) + "&mood=" + currentMoodStr;
-
-    if (https.begin(client, url)) {
-        int httpCode = https.GET();
-        if (httpCode == HTTP_CODE_OK) {
-            String payload = https.getString();
-            JsonDocument doc;
-            DeserializationError err = deserializeJson(doc, payload);
-            if (!err) {
-                const char* cmd = doc["cmd"];
-                if (cmd && strlen(cmd) > 0) {
-                    String cmdStr = String(cmd);
-                    Serial.println("[Nuvem Hostinger] 📡 Comando remoto recebido: " + cmdStr);
-
-                    // Pisca LED azul indicando comando remoto recebido
-                    rgbLedWrite(RGB_BUILTIN, 0, 100, 255);
-                    delay(70);
-                    rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
-
-                    // Executa o comando no robô
-                    executeRobotCommand(cmdStr);
+            if (https.begin(client, url)) {
+                int httpCode = https.GET();
+                if (httpCode == HTTP_CODE_OK) {
+                    String payload = https.getString();
+                    JsonDocument doc;
+                    DeserializationError err = deserializeJson(doc, payload);
+                    if (!err) {
+                        const char* cmd = doc["cmd"];
+                        if (cmd && strlen(cmd) > 0) {
+                            portENTER_CRITICAL(&cloudMux);
+                            strncpy(cloudCmdBuffer, cmd, sizeof(cloudCmdBuffer) - 1);
+                            cloudCmdBuffer[sizeof(cloudCmdBuffer) - 1] = '\0';
+                            pendingCloudCmd = true;
+                            portEXIT_CRITICAL(&cloudMux);
+                        }
+                    }
                 }
+                https.end();
             }
         }
-        https.end();
     }
 }
 
@@ -793,6 +897,17 @@ void setup() {
         drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString());
     };
 
+    // Inicia a tarefa de polling da nuvem no Core 0 (libera 100% o Core 1 para gráficos!)
+    xTaskCreatePinnedToCore(
+        cloudPollingTask,
+        "cloudPollingTask",
+        8192,
+        NULL,
+        1,
+        NULL,
+        0 // Core 0
+    );
+
     // Garante LEDs 100% desligados
     ledsOff();
 }
@@ -805,14 +920,14 @@ void loop() {
 
     // Mantém a conexão Wi-Fi ativa via WiFiMulti
     static unsigned long lastWifiCheck = 0;
-    if (now - lastWifiCheck > 3000) {
+    if (now - lastWifiCheck > 5000) {
         lastWifiCheck = now;
         if (WiFi.status() != WL_CONNECTED) {
             wifiMulti.run();
         }
     }
 
-    // LEDs ficam desligados quando nenhuma música estiver tocando
+    // Renderização dos olhos: fluida, sem travamentos e com framerate cravado a 30 FPS!
     if (showingText) {
         if (now - textStartTime > textDuration) {
             showingText = false;
@@ -821,20 +936,27 @@ void loop() {
         roboEyes.update();
     }
 
-    // Consulta periódica da BBAS3 a cada 5 minutos
-    if (now - lastStockCheckTime > 300000) {
-        lastStockCheckTime = now;
-        updateStockBBAS3();
-    }
-
-    // Polling Remoto na Nuvem (Hostinger API) a cada 1.8 segundos quando conectado
-    checkRemoteCloudApi();
-
     // Leitura do Monitor Serial / Web Serial USB
     if (Serial.available()) {
         String cmd = Serial.readStringUntil('\n');
         executeRobotCommand(cmd);
     }
 
-    delay(5);
+    // Executa comando remoto recebido da nuvem pelo Core 0
+    if (pendingCloudCmd) {
+        char cmdToRun[64];
+        portENTER_CRITICAL(&cloudMux);
+        strncpy(cmdToRun, cloudCmdBuffer, sizeof(cmdToRun));
+        pendingCloudCmd = false;
+        portEXIT_CRITICAL(&cloudMux);
+
+        Serial.println("[Nuvem Hostinger] 📡 Executando comando remoto: " + String(cmdToRun));
+        rgbLedWrite(RGB_BUILTIN, 0, 100, 255);
+        delay(60);
+        rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
+
+        executeRobotCommand(String(cmdToRun));
+    }
+
+    delay(2);
 }

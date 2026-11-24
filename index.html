@@ -1751,6 +1751,7 @@
         function triggerBlink() {
             isBlinking = true;
             drawOled();
+            sendEsp32Command('blink');
             setTimeout(() => {
                 isBlinking = false;
                 drawOled();
@@ -2716,7 +2717,8 @@
                     setLedColor('off');
                 }, 600);
             } else if (song === 'imperial') {
-                setFace('angry');
+                currentFace = 'angry';
+                drawOled();
                 const notes = [
                     {f: 440, d: 450}, {f: 440, d: 450}, {f: 440, d: 450}, {f: 349, d: 320}, {f: 523, d: 140},
                     {f: 440, d: 450}, {f: 349, d: 320}, {f: 523, d: 140}, {f: 440, d: 650}, {f: 0, d: 150},
@@ -2738,7 +2740,8 @@
                     setLedColor('off');
                 }, time + 200);
             } else if (song === 'starwars_main') {
-                setFace('happy');
+                currentFace = 'happy';
+                drawOled();
                 const notes = [
                     {f: 294, d: 150}, {f: 294, d: 150}, {f: 294, d: 150},
                     {f: 392, d: 600}, {f: 587, d: 600},
