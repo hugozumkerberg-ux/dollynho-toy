@@ -60,6 +60,7 @@ unsigned long lastStatusBarTime = 0;
 const char* getTimeString() {
     static char buf[10] = "12:00";
     static unsigned long lastCheck = 0;
+    static bool ntpSynced = false;
     unsigned long now = millis();
     if (now - lastCheck < 1000 && lastCheck != 0) {
         return buf;
@@ -67,9 +68,13 @@ const char* getTimeString() {
     lastCheck = now;
 
     struct tm timeinfo;
-    if (WiFi.status() == WL_CONNECTED && getLocalTime(&timeinfo, 5)) {
-        strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
-        return buf;
+    // O RTC interno do ESP32 mantem a hora precisa com 0 delay apos a sincronizacao
+    if (getLocalTime(&timeinfo, 0)) {
+        if (timeinfo.tm_year > (2020 - 1900)) {
+            ntpSynced = true;
+            strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
+            return buf;
+        }
     }
     if (hasManualTime && strlen(manualTimeStr) >= 5) {
         return manualTimeStr;
@@ -453,12 +458,18 @@ void setup() {
     buzzerNoTone();
 
     Wire.begin(PIN_OLED_SDA, PIN_OLED_SCL);
+    Wire.setClock(400000); // Fast Mode I2C 400kHz (4x mais rápido que o padrão 100kHz)
+
     if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
         display.begin(SSD1306_SWITCHCAPVCC, 0x3D);
     }
 
-    // Inicialização do RoboEyes com tamanho ajustado para a barra de status
-    roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 50);
+    // Aumenta a taxa de oscilação interna do painel SSD1306 para eliminar flicker de varredura
+    display.ssd1306_command(SSD1306_SETDISPLAYCLOCKDIV);
+    display.ssd1306_command(0xF0); // 0xF0 = Máxima frequência do oscilador interno (~160Hz)
+
+    // Inicialização do RoboEyes a 30 FPS estáveis (33ms por quadro, tempo ideal para I2C a 400kHz)
+    roboEyes.begin(SCREEN_WIDTH, SCREEN_HEIGHT, 30);
     roboEyes.setWidth(34, 34);
     roboEyes.setHeight(30, 30);
     roboEyes.setBorderradius(8, 8);
@@ -495,7 +506,16 @@ void setup() {
 
     // Hook de overlay para desenhar a barra de status no mesmo buffer dos olhos (sem flicker)
     roboEyes.onDrawOverlay = [](Adafruit_SSD1306* disp) {
-        drawStatusBar(*disp, WiFi.status() == WL_CONNECTED, WiFi.RSSI(), getTimeString());
+        static bool cachedWifi = false;
+        static int cachedRssi = 0;
+        static unsigned long lastWifiCheck = 0;
+        unsigned long t = millis();
+        if (t - lastWifiCheck > 2500 || lastWifiCheck == 0) {
+            lastWifiCheck = t;
+            cachedWifi = (WiFi.status() == WL_CONNECTED);
+            if (cachedWifi) cachedRssi = WiFi.RSSI();
+        }
+        drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString());
     };
 
     // Garante LEDs 100% desligados

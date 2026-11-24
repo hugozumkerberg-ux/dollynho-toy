@@ -323,7 +323,7 @@ inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi
 
     // Texto de status do Wi-Fi ao lado do ícone
     disp.setTextSize(1);
-    disp.setTextColor(SSD1306_WHITE);
+    disp.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
     disp.setCursor(16, 2);
     if (isWifiConnected) {
         disp.print("WiFi");
