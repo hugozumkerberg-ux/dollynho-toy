@@ -108,4 +108,28 @@ const Note PROGMEM SONG_TETRIS_FULL[] = {
 };
 const int LEN_TETRIS_FULL = sizeof(SONG_TETRIS_FULL) / sizeof(Note);
 
+// -------------------------------------------------------------
+// 5. AYRTON SENNA: TEMA DA VITÓRIA (FÓRMULA 1 COMPLETO)
+// -------------------------------------------------------------
+const Note PROGMEM SONG_SENNA_VITORIA[] = {
+    // Fanfarra Triunfal / Introdução
+    {NOTE_D4, 180}, {NOTE_G4, 420}, {NOTE_B4, 180}, {NOTE_D5, 650}, {REST, 140},
+    {NOTE_C5, 180}, {NOTE_B4, 180}, {NOTE_A4, 180}, {NOTE_G4, 180}, {NOTE_A4, 750}, {REST, 180},
+
+    {NOTE_D4, 180}, {NOTE_A4, 420}, {NOTE_C5, 180}, {NOTE_E5, 650}, {REST, 140},
+    {NOTE_D5, 180}, {NOTE_C5, 180}, {NOTE_B4, 180}, {NOTE_A4, 180}, {NOTE_B4, 750}, {REST, 200},
+
+    // Refrão Épico "Senna do Brasil!"
+    {NOTE_D5, 180}, {NOTE_G5, 480}, {NOTE_FS5, 180}, {NOTE_E5, 180}, {NOTE_D5, 320}, {NOTE_C5, 320}, {NOTE_B4, 700}, {REST, 140},
+    {NOTE_A4, 180}, {NOTE_B4, 180}, {NOTE_C5, 280}, {NOTE_B4, 280}, {NOTE_A4, 280}, {NOTE_G4, 900}, {REST, 180},
+
+    // Segunda estrofe com resolução máxima
+    {NOTE_D4, 180}, {NOTE_G4, 420}, {NOTE_B4, 180}, {NOTE_D5, 650}, {REST, 140},
+    {NOTE_C5, 180}, {NOTE_B4, 180}, {NOTE_A4, 180}, {NOTE_G4, 180}, {NOTE_A4, 750}, {REST, 180},
+
+    {NOTE_D5, 180}, {NOTE_G5, 520}, {NOTE_FS5, 180}, {NOTE_E5, 180}, {NOTE_D5, 320}, {NOTE_C5, 320}, {NOTE_B4, 700}, {REST, 140},
+    {NOTE_A4, 180}, {NOTE_B4, 180}, {NOTE_C5, 280}, {NOTE_D5, 280}, {NOTE_B4, 300}, {NOTE_G4, 1200}
+};
+const int LEN_SENNA_VITORIA = sizeof(SONG_SENNA_VITORIA) / sizeof(Note);
+
 #endif // SONGS_8BIT_H

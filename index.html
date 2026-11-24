@@ -680,6 +680,9 @@
             </p>
 
             <div class="music-grid">
+                <button class="btn-music" id="btnSenna" onclick="play8Bit('senna')" style="border-color: #facc15; background: #2e1d08;">
+                    <span>🏎️</span> Ayrton Senna: Tema da Vitória
+                </button>
                 <button class="btn-music" id="btnStarWarsImperial" onclick="play8Bit('imperial')">
                     <span>⚔️</span> Star Wars: Marcha Imperial
                 </button>
@@ -1445,6 +1448,80 @@
             ctx.textAlign = 'left';
         }
 
+        function drawSennaWebCanvas(step) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, 256, 128);
+
+            // Bandeira quadriculada animada no topo
+            for (let x = 0; x < 256; x += 16) {
+                let isWhite = ((x / 16 + (step % 2)) % 2 === 0);
+                ctx.fillStyle = isWhite ? '#ffffff' : '#111827';
+                ctx.fillRect(x, 0, 8, 4);
+                ctx.fillStyle = isWhite ? '#111827' : '#ffffff';
+                ctx.fillRect(x + 8, 0, 8, 4);
+
+                ctx.fillStyle = isWhite ? '#111827' : '#ffffff';
+                ctx.fillRect(x, 4, 8, 4);
+                ctx.fillStyle = isWhite ? '#ffffff' : '#111827';
+                ctx.fillRect(x + 8, 4, 8, 4);
+            }
+
+            // Moldura do Logo SENNA
+            ctx.strokeStyle = '#facc15';
+            ctx.lineWidth = 2;
+            roundRect(ctx, 10, 16, 236, 68, 8);
+            ctx.stroke();
+
+            // Logo duplo 'S' estilizado de velocidade do Ayrton Senna
+            ctx.save();
+            ctx.font = 'italic 900 42px "Segoe UI", sans-serif';
+            ctx.fillStyle = '#16a34a'; // Verde
+            ctx.fillText("S", 24, 66);
+            ctx.fillStyle = '#facc15'; // Amarelo
+            ctx.fillText("S", 30, 66);
+            ctx.restore();
+
+            // Tipografia Oficial Ayrton Senna
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText("AYRTON", 76, 40);
+
+            ctx.fillStyle = '#facc15';
+            ctx.font = '900 24px "Segoe UI", sans-serif';
+            ctx.fillText("SENNA", 76, 64);
+
+            ctx.fillStyle = '#4ade80';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText("DO BRASIL! 🏆 #1", 76, 78);
+
+            // Pista de corrida e zebras
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 92, 256, 36);
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(0, 92, 256, 2);
+
+            // Zebras da pista em alta velocidade
+            for (let x = (step * 8) % 32; x < 256; x += 32) {
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(x, 94, 16, 3);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(x + 16, 94, 16, 3);
+            }
+
+            // Carro F1 acelerando pela pista
+            let carX = (step * 14) % 320 - 40;
+            ctx.font = '24px sans-serif';
+            ctx.fillText("🏎️", carX, 120);
+
+            // Linhas de rastro e velocidade aerodinâmica
+            if (carX > 15) {
+                ctx.fillStyle = '#38bdf8';
+                ctx.fillRect(carX - 25, 110, 18, 2);
+                ctx.fillRect(carX - 45, 114, 30, 2);
+            }
+        }
+
         let songVisualInterval = null;
 
         function startSongVisual(type, title, totalDurationMs) {
@@ -1458,6 +1535,8 @@
                     drawStarWarsWebCanvas(step, title);
                 } else if (type === 'coin') {
                     drawMarioCoinWebCanvas(step);
+                } else if (type === 'senna') {
+                    drawSennaWebCanvas(step);
                 }
             }, 55);
 
@@ -1555,6 +1634,37 @@
                     if (n.f > 0) playTone(n.f, n.d, 'square', time);
                     time += n.d + 30;
                 });
+            } else if (song === 'senna') {
+                setFace('happy');
+                const notes = [
+                    // Fanfarra / Introdução
+                    {f: 294, d: 180}, {f: 392, d: 420}, {f: 494, d: 180}, {f: 587, d: 650}, {f: 0, d: 140},
+                    {f: 523, d: 180}, {f: 494, d: 180}, {f: 440, d: 180}, {f: 392, d: 180}, {f: 440, d: 750}, {f: 0, d: 180},
+                    {f: 294, d: 180}, {f: 440, d: 420}, {f: 523, d: 180}, {f: 659, d: 650}, {f: 0, d: 140},
+                    {f: 587, d: 180}, {f: 523, d: 180}, {f: 494, d: 180}, {f: 440, d: 180}, {f: 494, d: 750}, {f: 0, d: 200},
+
+                    // Refrão Triunfal "Senna do Brasil!"
+                    {f: 587, d: 180}, {f: 784, d: 480}, {f: 740, d: 180}, {f: 659, d: 180}, {f: 587, d: 320}, {f: 523, d: 320}, {f: 494, d: 700}, {f: 0, d: 140},
+                    {f: 440, d: 180}, {f: 494, d: 180}, {f: 523, d: 280}, {f: 494, d: 280}, {f: 440, d: 280}, {f: 392, d: 900}, {f: 0, d: 180},
+
+                    // Segunda passagem e final
+                    {f: 294, d: 180}, {f: 392, d: 420}, {f: 494, d: 180}, {f: 587, d: 650}, {f: 0, d: 140},
+                    {f: 523, d: 180}, {f: 494, d: 180}, {f: 440, d: 180}, {f: 392, d: 180}, {f: 440, d: 750}, {f: 0, d: 180},
+                    {f: 587, d: 180}, {f: 784, d: 520}, {f: 740, d: 180}, {f: 659, d: 180}, {f: 587, d: 320}, {f: 523, d: 320}, {f: 494, d: 700}, {f: 0, d: 140},
+                    {f: 440, d: 180}, {f: 494, d: 180}, {f: 523, d: 280}, {f: 587, d: 280}, {f: 494, d: 300}, {f: 392, d: 1200}
+                ];
+                let time = 0;
+                notes.forEach((n, idx) => {
+                    if (n.f > 0) {
+                        playTone(n.f, n.d, 'sawtooth', time);
+                        // Alterna os LEDs na tela entre verde e amarelo
+                        setTimeout(() => {
+                            setLedColor(idx % 2 === 0 ? 'green' : 'yellow');
+                        }, time);
+                    }
+                    time += n.d + 25;
+                });
+                startSongVisual('senna', 'AYRTON SENNA DO BRASIL', time);
             }
         }
 

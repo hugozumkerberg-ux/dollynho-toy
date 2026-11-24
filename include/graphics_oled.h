@@ -205,4 +205,95 @@ inline void drawMarioCoinNotification(int frame, int totalCoins, Adafruit_SSD130
     disp.display();
 }
 
+// -------------------------------------------------------------
+// Sprites do Ayrton Senna: Logo "S" 32x22 e Carro F1 24x10
+// -------------------------------------------------------------
+const unsigned char PROGMEM SENNA_LOGO_32x22[] = {
+    0x03, 0xfc, 0x00, 0x00,
+    0x07, 0xff, 0x00, 0x00,
+    0x0f, 0x0f, 0x80, 0x00,
+    0x1e, 0x07, 0xc0, 0x00,
+    0x1c, 0x03, 0xc0, 0x00,
+    0x1c, 0x03, 0x80, 0x00,
+    0x00, 0x07, 0x00, 0x00,
+    0x00, 0x0f, 0x00, 0x00,
+    0x00, 0x3e, 0x00, 0x00,
+    0x00, 0x7c, 0x00, 0x00,
+    0x01, 0xf8, 0x00, 0x00,
+    0x03, 0xf0, 0x00, 0x00,
+    0x07, 0xc0, 0x00, 0x00,
+    0x0f, 0x00, 0x00, 0x00,
+    0x1c, 0x03, 0x80, 0x00,
+    0x1c, 0x07, 0x00, 0x00,
+    0x1e, 0x0e, 0x00, 0x00,
+    0x0f, 0x1e, 0x00, 0x00,
+    0x07, 0xfc, 0x00, 0x00,
+    0x01, 0xf0, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00
+};
+
+const unsigned char PROGMEM F1_CAR_24x10[] = {
+    0x00, 0x38, 0x00,
+    0x00, 0x7c, 0x00,
+    0x60, 0x7e, 0x00,
+    0x60, 0x7e, 0x00,
+    0x71, 0xff, 0x80,
+    0x7f, 0xff, 0xe0,
+    0x3f, 0xff, 0xfc,
+    0x1c, 0x00, 0x38,
+    0x1c, 0x00, 0x38,
+    0x08, 0x00, 0x10
+};
+
+// -------------------------------------------------------------
+// Renderizador Especial: Ayrton Senna + Logo "S" no OLED
+// -------------------------------------------------------------
+inline void drawSennaScene(int step, Adafruit_SSD1306 &disp) {
+    disp.clearDisplay();
+
+    // Bandeira quadriculada da Fórmula 1 no topo
+    for (int x = 0; x < 128; x += 8) {
+        if ((x / 8 + (step % 2)) % 2 == 0) {
+            disp.fillRect(x, 0, 4, 3, SSD1306_WHITE);
+            disp.fillRect(x + 4, 3, 4, 3, SSD1306_WHITE);
+        } else {
+            disp.fillRect(x + 4, 0, 4, 3, SSD1306_WHITE);
+            disp.fillRect(x, 3, 4, 3, SSD1306_WHITE);
+        }
+    }
+
+    // Logo SENNA 'S' estilizado no lado esquerdo
+    disp.drawBitmap(4, 12, SENNA_LOGO_32x22, 32, 22, SSD1306_WHITE);
+
+    // Tipografia Ayrton Senna
+    disp.setTextSize(1);
+    disp.setTextColor(SSD1306_WHITE);
+    disp.setCursor(42, 10);
+    disp.print("AYRTON");
+
+    disp.setTextSize(2);
+    disp.setCursor(42, 20);
+    disp.print("SENNA");
+
+    disp.setTextSize(1);
+    disp.setCursor(42, 38);
+    disp.print("DO BRASIL! #1");
+
+    // Linha de asfalto / pista de corrida
+    disp.drawLine(0, 52, 127, 52, SSD1306_WHITE);
+
+    // Carro de Fórmula 1 acelerando pela pista
+    int carX = (step * 8) % 160 - 24;
+    disp.drawBitmap(carX, 53, F1_CAR_24x10, 24, 10, SSD1306_WHITE);
+
+    // Linhas de velocidade atrás do carro
+    if (carX > 10) {
+        disp.drawFastHLine(carX - 8, 56, 6, SSD1306_WHITE);
+        disp.drawFastHLine(carX - 16, 58, 8, SSD1306_WHITE);
+    }
+
+    disp.display();
+}
+
 #endif // GRAPHICS_OLED_H

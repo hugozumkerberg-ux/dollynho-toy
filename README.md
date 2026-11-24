@@ -29,12 +29,13 @@ O **Dollynho Toy** é um robô assistente de mesa interativo baseado no microcon
   - Se a ação subir: **LED Verde pisca** + comemoração 8-bit + olhos felizes.
   - Se a ação cair: **LED Vermelho pisca** + tom grave + olhos tristes com gota de suor.
 - **🎼 Jukebox 8-Bits Chiptune com Animação Visual no OLED:**
+  - 🏎️ **Ayrton Senna - Tema da Vitória (F1):** Tema épico completo com o **Logo oficial "S" do Ayrton Senna**, bandeira quadriculada, carro de F1 acelerando pela pista com zebras e **show de luzes Verde e Amarelo do Brasil**!
   - 🍄 **Super Mario Bros:** Tema completo com **animação do Mario no OLED** (Mario correndo pela fase World 1-1, pulo no bloco [?] e moeda saltando)!
   - 🪙 **Notificação Especial da Moeda do Mario (`coin` / `moeda`):** Card retrô NES no OLED com bloco `[?]`, salto parabólico de moeda brilhante rotativa, estrelas de brilho, pontuação flutuante `+200 PTS`, som icônico de moeda, piscada dourada no LED RGB on-board e contador acumulado de moedas!
   - ⚔️ **Star Wars - Marcha Imperial:** Tema completo com **logo Star Wars estilizado + Hyperspace** (campo estelar 3D na velocidade da luz)!
   - 🚀 **Star Wars - Tema Principal:** Tema completo com **logo Star Wars + Hyperspace**!
   - 🧱 **Tetris:** *Korobeiniki* completo!
-  - Show de luzes sincronizado nos LEDs Verde e Vermelho durante a reprodução.
+  - Show de luzes sincronizado nos LEDs Verde, Amarelo e Vermelho durante a reprodução.
   - Sincronização visual em tempo real no simulador OLED e **Toast flutuante no Painel Web**!
 - **🧠 Inteligência Artificial com Google Gemini:**
   - Responde a perguntas em português enviadas pelo Monitor Serial ou pelo Microfone do Painel Web.
@@ -103,6 +104,7 @@ O projeto utiliza o **PlatformIO** integrado ao VS Code:
 - `imperial` ou `vader`: Toca a Marcha Imperial Completa do Star Wars!
 - `starwars` ou `sw`: Toca o Tema Principal Completo do Star Wars!
 - `mario`: Toca Super Mario Bros Completo!
+- `senna`, `vitoria` ou `f1`: Toca o Tema da Vitória do Ayrton Senna com Logo Senna no OLED!
 - `coin` ou `moeda`: Dispara a Notificação da Moeda do Mario no OLED (+200 PTS)!
 - `tetris`: Toca Tetris Completo!
 - `bbas3`: Atualiza a cotação da BBAS3 na B3 e reage com LEDs e som.

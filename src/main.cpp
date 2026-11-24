@@ -99,7 +99,8 @@ enum VisualSongTheme {
     THEME_NONE,
     THEME_MARIO,
     THEME_STAR_WARS_IMPERIAL,
-    THEME_STAR_WARS_MAIN
+    THEME_STAR_WARS_MAIN,
+    THEME_SENNA
 };
 
 // ----------------------------------------------------
@@ -125,13 +126,27 @@ void playSong(const Note* song, int length, VisualSongTheme theme = THEME_NONE) 
             drawStarWarsScene(i, "IMPERIAL MARCH", display);
         } else if (theme == THEME_STAR_WARS_MAIN) {
             drawStarWarsScene(i, "MAIN THEME", display);
+        } else if (theme == THEME_SENNA) {
+            drawSennaScene(i, display);
         }
 
         if (pitch > 0) {
             tone(PIN_BUZZER, pitch, duration);
 
-            // LEDs piscam no ritmo da música (verde para agudos, vermelho para graves)
-            if (pitch > 550) {
+            if (theme == THEME_SENNA) {
+                // Alterna LEDs em Verde e Amarelo (Cores do Brasil e do Capacete do Ayrton Senna!)
+                if (i % 2 == 0) {
+                    analogWrite(PIN_LED_VERDE, brightness);
+                    analogWrite(PIN_LED_AMARELO, 0);
+                    analogWrite(PIN_LED_VERMELHO, 0);
+                    rgbLedWrite(RGB_BUILTIN, 0, 255, 30); // Verde Esmeralda
+                } else {
+                    analogWrite(PIN_LED_VERDE, (brightness * 160) / 255);
+                    analogWrite(PIN_LED_AMARELO, brightness);
+                    analogWrite(PIN_LED_VERMELHO, (brightness * 40) / 255);
+                    rgbLedWrite(RGB_BUILTIN, 255, 215, 0); // Amarelo Dourado
+                }
+            } else if (pitch > 550) {
                 setLedsColor(0, 255, 0, brightness);
             } else {
                 setLedsColor(255, 0, 0, brightness);
@@ -510,6 +525,12 @@ void loop() {
             Serial.println("[Música] Tocando Tetris Korobeiniki Completo!");
             roboEyes.setMood(DEFAULT);
             playSong(SONG_TETRIS_FULL, LEN_TETRIS_FULL, THEME_NONE);
+        }
+        else if (cmd == "senna" || cmd == "vitoria" || cmd == "f1") {
+            Serial.println("[Música] 🏎️ Ayrton Senna: Tema da Vitória + Logo Senna no OLED!");
+            roboEyes.setMood(HAPPY);
+            roboEyes.anim_laugh();
+            playSong(SONG_SENNA_VITORIA, LEN_SENNA_VITORIA, THEME_SENNA);
         }
         else {
             askGemini(cmd);
