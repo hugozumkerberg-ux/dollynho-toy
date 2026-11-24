@@ -1555,12 +1555,12 @@
                                 <!-- GPIO 15 (Linha 7) -->
                                 <circle cx="175" cy="135" r="5" fill="#38bdf8" stroke="#fff" stroke-width="1.2"/>
                                 <text x="150" y="139" fill="#38bdf8" font-size="11" font-weight="900" text-anchor="end">GPIO 15 (L7)</text>
-                                <!-- GPIO 8 SDA (Linha 11) -->
-                                <circle cx="175" cy="195" r="5" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
-                                <text x="150" y="199" fill="#38bdf8" font-size="11.5" font-weight="900" text-anchor="end">SDA ➔ GPIO 8 (L11)</text>
-                                <!-- GPIO 9 SCL (Linha 14) -->
-                                <circle cx="175" cy="240" r="5" fill="#facc15" stroke="#fff" stroke-width="1.5"/>
-                                <text x="150" y="244" fill="#fde047" font-size="11.5" font-weight="900" text-anchor="end">SCL ➔ GPIO 9 (L14)</text>
+                                <!-- GPIO 12 SDA (Linha 17) -->
+                                <circle cx="175" cy="285" r="5" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
+                                <text x="150" y="289" fill="#38bdf8" font-size="11.5" font-weight="900" text-anchor="end">SDA ➔ GPIO 12 (L17)</text>
+                                <!-- GPIO 13 SCL (Linha 18) -->
+                                <circle cx="175" cy="300" r="5" fill="#facc15" stroke="#fff" stroke-width="1.5"/>
+                                <text x="150" y="304" fill="#fde047" font-size="11.5" font-weight="900" text-anchor="end">SCL ➔ GPIO 13 (L18)</text>
                                 <!-- GND (Linha 21) -->
                                 <circle cx="175" cy="345" r="5" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5"/>
                                 <text x="150" y="349" fill="#cbd5e1" font-size="11" font-weight="900" text-anchor="end">GND (L21)</text>
@@ -1676,14 +1676,14 @@
                                 d="M 30 435 C 55 430, 85 430, 115 420"
                                 fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round"/>
 
-                            <!-- Circuito I2C: GPIO 8 SDA (ESP32 L11 -> Linha 29) -->
+                            <!-- Circuito I2C: GPIO 12 SDA (ESP32 L17 -> Linha 29) -->
                             <path class="jumper-wire" data-circuit="oled" data-wire="oled_sda" onclick="inspectWire('oled_sda')"
-                                d="M 175 195 C 140 220, 165 370, 155 420"
+                                d="M 175 285 C 140 305, 165 370, 155 420"
                                 fill="none" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
 
-                            <!-- Circuito I2C: GPIO 9 SCL (ESP32 L14 -> Linha 28) -->
+                            <!-- Circuito I2C: GPIO 13 SCL (ESP32 L18 -> Linha 28) -->
                             <path class="jumper-wire" data-circuit="oled" data-wire="oled_scl" onclick="inspectWire('oled_scl')"
-                                d="M 175 240 C 145 260, 140 370, 135 420"
+                                d="M 175 300 C 145 320, 140 370, 135 420"
                                 fill="none" stroke="#facc15" stroke-width="3.5" stroke-linecap="round"/>
 
                             <!-- Circuito LED Verde: GPIO 4 (ESP32 L3 -> Linha 33) -->
@@ -1802,7 +1802,7 @@
                             <div class="step-item" onclick="toggleStep(3)">
                                 <input type="checkbox" id="step3" class="step-check" onchange="updateStepProgress()">
                                 <label for="step3" class="step-label">
-                                    <strong>Passo 3:</strong> Encaixe o <strong>OLED SSD1306 (Linhas 26 a 29)</strong>: VCC no (+), GND no (-), SCL na Linha 14 (GPIO 9) e SDA na Linha 11 (GPIO 8).
+                                    <strong>Passo 3:</strong> Encaixe o <strong>OLED SSD1306 (Linhas 26 a 29)</strong>: VCC no (+), GND no (-), SCL na Linha 18 (GPIO 13) e SDA na Linha 17 (GPIO 12).
                                 </label>
                             </div>
                             <div class="step-item" onclick="toggleStep(4)">
@@ -1869,8 +1869,8 @@
                         <div style="font-size: 1.15rem; line-height: 1.8;">
                             <div>• <strong>VCC</strong> ➔ <span class="pin-chip" style="background:#dc2626;">Pino 3.3V</span> (Fio Vermelho)</div>
                             <div>• <strong>GND</strong> ➔ <span class="pin-chip" style="background:#0f172a;">Pino GND</span> (Fio Preto)</div>
-                            <div>• <strong>SCL</strong> ➔ <span class="pin-chip" style="background:#ca8a04;">GPIO 9</span> (Linha 14 / Fio Amarelo)</div>
-                            <div>• <strong>SDA</strong> ➔ <span class="pin-chip" style="background:#0284c7;">GPIO 8</span> (Linha 11 / Fio Azul)</div>
+                            <div>• <strong>SCL</strong> ➔ <span class="pin-chip" style="background:#ca8a04;">GPIO 13</span> (Linha 18 / Fio Amarelo)</div>
+                            <div>• <strong>SDA</strong> ➔ <span class="pin-chip" style="background:#0284c7;">GPIO 12</span> (Linha 17 / Fio Azul)</div>
                         </div>
                     </div>
                     <!-- Card LEDs -->
@@ -1948,7 +1948,7 @@
                                 <span class="wire-dot" style="background: #38bdf8;"></span>Azul
                             </td>
                             <td>VCC, GND, SCL, SDA</td>
-                            <td><span class="pin-chip">3.3V</span>, <span class="pin-chip">GND</span>, <span class="pin-chip">GPIO 9</span>, <span class="pin-chip">GPIO 8</span></td>
+                            <td><span class="pin-chip">3.3V</span>, <span class="pin-chip">GND</span>, <span class="pin-chip">GPIO 13</span>, <span class="pin-chip">GPIO 12</span></td>
                             <td>Expressões Faciais & Logos 8-Bit</td>
                         </tr>
                         <tr>
@@ -3380,7 +3380,7 @@
             'oled': {
                 title: '📟 Tela OLED SSD1306 0.96" I2C (Linhas 26 a 29)',
                 badge: 'I2C (0x3C)',
-                body: 'Display gráfico monocromático de 128x64 pixels conectado via barramento I2C de 2 fios.<br>• <strong>VCC (L26):</strong> 3.3V | <strong>GND (L27):</strong> 0V<br>• <strong>SCL (L28):</strong> GPIO 9 (Clock)<br>• <strong>SDA (L29):</strong> GPIO 8 (Dados)<br>Exibe expressões faciais dinâmicas do Dollynho e animações 8-bit.',
+                body: 'Display gráfico monocromático de 128x64 pixels conectado via barramento I2C de 2 fios.<br>• <strong>VCC (L26):</strong> 3.3V | <strong>GND (L27):</strong> 0V<br>• <strong>SCL (L28):</strong> GPIO 13 (Clock)<br>• <strong>SDA (L29):</strong> GPIO 12 (Dados)<br>Exibe expressões faciais dinâmicas do Dollynho e animações 8-bit.',
                 action: '<button onclick="testRandomFace()" class="proto-filter-btn" style="background:#0284c7; color:#fff;">✨ Alternar Expressão no OLED</button>'
             },
             'led_green': {
@@ -3426,8 +3426,8 @@
             'esp_gnd': { title: 'Fio Preto: GND ESP32 ➔ Barramento (-)', text: 'Origem: Pino GND do ESP32 (Linha 21). Destino: Trilho de aterramento negativo (-). Ponto de referência comum (0V).' },
             'oled_vcc': { title: 'Jumper Vermelho: Trilho (+) ➔ VCC OLED (Linha 26)', text: 'Alimenta o display SSD1306 com 3.3V.' },
             'oled_gnd': { title: 'Jumper Preto: Trilho (-) ➔ GND OLED (Linha 27)', text: 'Aterramento do display OLED.' },
-            'oled_sda': { title: 'Fio Azul: GPIO 8 ➔ SDA OLED (Linha 29)', text: 'Linha de dados I2C (Serial Data) com sinal digital bidirecional.' },
-            'oled_scl': { title: 'Fio Amarelo: GPIO 9 ➔ SCL OLED (Linha 28)', text: 'Linha de clock I2C (Serial Clock) gerada pelo ESP32 a 400kHz.' },
+            'oled_sda': { title: 'Fio Azul: GPIO 12 ➔ SDA OLED (Linha 29)', text: 'Linha de dados I2C (Serial Data) com sinal digital bidirecional no GPIO 12.' },
+            'oled_scl': { title: 'Fio Amarelo: GPIO 13 ➔ SCL OLED (Linha 28)', text: 'Linha de clock I2C (Serial Clock) gerada pelo ESP32 no GPIO 13 a 400kHz.' },
             'led_green_sig': { title: 'Fio Verde: GPIO 4 ➔ Resistor LED Verde (Linha 33)', text: 'Sinal PWM emitido pelo ESP32 no GPIO 4 para modular o LED Verde.' },
             'led_green_gnd': { title: 'Jumper Preto: Cátodo LED Verde (Linha 35) ➔ Trilho (-)', text: 'Retorno de corrente do LED Verde para o GND.' },
             'led_red_sig': { title: 'Fio Vermelho: GPIO 6 ➔ Resistor LED Vermelho (Linha 38)', text: 'Sinal PWM emitido pelo ESP32 no GPIO 6 para modular o LED Vermelho.' },
