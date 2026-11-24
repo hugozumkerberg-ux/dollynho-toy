@@ -1079,16 +1079,21 @@
         <div class="coin-badge-count">x<span id="toastCoinCount">1</span></div>
     </div>
 
-    <!-- Banner de Status de Conexão Sem Fio / Nuvem API -->
-    <div id="cloudStatusBanner" style="background: linear-gradient(90deg, #064e3b, #0f172a); border: 1px solid #22c55e; border-left: 5px solid #22c55e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 16px;">
+    <!-- Banner de Status de Conexão Sem Fio / Nuvem API / Bluetooth -->
+    <div id="cloudStatusBanner" style="background: linear-gradient(90deg, #064e3b, #0f172a); border: 1px solid #22c55e; border-left: 5px solid #22c55e; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap;">
         <div style="display: flex; align-items: center; gap: 12px;">
             <span style="display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 12px #22c55e; flex-shrink: 0;" id="cloudStatusDot"></span>
             <span id="cloudStatusText" style="color: #e2e8f0; font-size: 0.9rem;">
-                <strong style="color: #4ade80;">📡 Robô 100% Sem Fio (Modo Nuvem):</strong> Consumindo a API Hostinger em tempo real via Wi-Fi. Todos os botões, músicas e expressões funcionam sem cabo!
+                <strong style="color: #4ade80;">📡 Robô Sem Fio:</strong> Conexão via Wi-Fi ou Bluetooth BLE. Se o Wi-Fi falhar, use o Bluetooth direto!
             </span>
         </div>
-        <div id="cloudPingBadge" style="background:#0f172a; border: 1px solid #22c55e; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; color: #86efac; font-weight: 600; white-space: nowrap;">
-            🟢 API Hostinger: Conectado
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="headerBleBtn" onclick="toggleBle()" style="background:#0284c7; border: 1px solid #38bdf8; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; color: #fff; font-weight: bold; cursor: pointer;">
+                🔵 Parear Bluetooth (BLE)
+            </button>
+            <div id="cloudPingBadge" style="background:#0f172a; border: 1px solid #22c55e; padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; color: #86efac; font-weight: 600; white-space: nowrap;">
+                🟢 Nuvem Wi-Fi: Ativa
+            </div>
         </div>
     </div>
 
@@ -1350,9 +1355,11 @@
                         <div style="font-size: 0.78rem; color: #94a3b8; font-weight: normal;">Comunicação bidirecional direta via porta Serial (COM8) • Stream SSE sem recarregar a página</div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="quick-cmd-btn" id="terminalWebSerialBtn" onclick="toggleWebSerial()" style="background:#0284c7; color:#fff; border-color:#38bdf8; font-weight:bold;">🔌 Conectar USB Direto</button>
-                    <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● COM8 @ 115200</span>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <button class="quick-cmd-btn" id="terminalBleBtn" onclick="toggleBle()" style="background:#0284c7; color:#fff; border-color:#38bdf8; font-weight:bold;">🔵 Conectar Bluetooth (BLE)</button>
+                    <span class="badge" id="terminalBleBadge" style="display:none; border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● BLE @ Dollynho-Toy</span>
+                    <button class="quick-cmd-btn" id="terminalWebSerialBtn" onclick="toggleWebSerial()" style="background:#1e293b; color:#e2e8f0; border-color:#475569; font-weight:bold;">🔌 Conectar USB</button>
+                    <span class="badge" id="terminalStatusBadge" style="border-color: #38bdf8; color: #38bdf8; background: #0c4a6e;">● Nuvem Hostinger</span>
                     <button onclick="clearTerminalLogs()" style="background:#1e293b; border:1px solid #334155; color:#94a3b8; padding:4px 10px; border-radius:6px; font-size:0.75rem; cursor:pointer;" title="Limpar janela do terminal">Limpar 🗑️</button>
                 </div>
             </div>
@@ -3590,6 +3597,142 @@
         }
 
         // ==========================================
+        // COMUNICAÇÃO BLUETOOTH LOW ENERGY (WEB BLUETOOTH API)
+        // ==========================================
+        let bleDevice = null;
+        let bleServer = null;
+        let bleRxCharacteristic = null;
+        let bleTxCharacteristic = null;
+        let isBleConnected = false;
+
+        const BLE_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const BLE_RX_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+        const BLE_TX_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+
+        async function toggleBle() {
+            if (isBleConnected) {
+                disconnectBle();
+            } else {
+                await connectBle();
+            }
+        }
+
+        async function connectBle() {
+            if (!navigator.bluetooth) {
+                alert("A Web Bluetooth API requer o navegador Google Chrome, Microsoft Edge ou Opera com conexão segura (HTTPS ou localhost).");
+                return;
+            }
+            try {
+                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), "[BLUETOOTH] Procurando 'Dollynho-Toy' via BLE...", 'system');
+                bleDevice = await navigator.bluetooth.requestDevice({
+                    filters: [
+                        { name: 'Dollynho-Toy' },
+                        { namePrefix: 'Dollynho' }
+                    ],
+                    optionalServices: [BLE_SERVICE_UUID]
+                });
+
+                bleDevice.addEventListener('gattserverdisconnected', onBleDisconnected);
+
+                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[BLUETOOTH] Conectando ao GATT de ${bleDevice.name}...`, 'system');
+                bleServer = await bleDevice.gatt.connect();
+
+                const service = await bleServer.getPrimaryService(BLE_SERVICE_UUID);
+                bleRxCharacteristic = await service.getCharacteristic(BLE_RX_UUID);
+                bleTxCharacteristic = await service.getCharacteristic(BLE_TX_UUID);
+
+                // Ativa notificações do robô para o navegador
+                try {
+                    await bleTxCharacteristic.startNotifications();
+                    bleTxCharacteristic.addEventListener('characteristicvaluechanged', (e) => {
+                        const val = new TextDecoder().decode(e.target.value);
+                        appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[BLE REC] ${val.trim()}`, 'received');
+                    });
+                } catch(e) {
+                    console.warn("Notificações BLE:", e);
+                }
+
+                isBleConnected = true;
+                updateBleUI(true);
+                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), "[BLUETOOTH] ✅ Conectado com sucesso ao Dollynho-Toy via BLE!", 'system');
+            } catch (err) {
+                console.warn("Erro ao conectar Bluetooth:", err);
+                appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[ERRO BLE] ${err.message}`, 'error');
+                updateBleUI(false);
+            }
+        }
+
+        function disconnectBle() {
+            if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) {
+                bleDevice.gatt.disconnect();
+            }
+            onBleDisconnected();
+        }
+
+        function onBleDisconnected() {
+            isBleConnected = false;
+            bleServer = null;
+            bleRxCharacteristic = null;
+            bleTxCharacteristic = null;
+            updateBleUI(false);
+            appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), "[BLUETOOTH] 📴 Dispositivo Bluetooth desconectado.", 'system');
+        }
+
+        function updateBleUI(connected) {
+            const btn = document.getElementById('terminalBleBtn');
+            const headerBtn = document.getElementById('headerBleBtn');
+            const badge = document.getElementById('terminalBleBadge');
+
+            if (connected) {
+                if (btn) {
+                    btn.innerHTML = '📴 Desconectar BLE';
+                    btn.style.background = '#047857';
+                    btn.style.borderColor = '#10b981';
+                }
+                if (headerBtn) {
+                    headerBtn.innerHTML = '🔵 Bluetooth ON';
+                    headerBtn.style.background = '#0284c7';
+                    headerBtn.style.borderColor = '#38bdf8';
+                }
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    badge.innerText = '● BLE @ Dollynho-Toy';
+                }
+                const banner = document.getElementById('cloudStatusBanner');
+                const text = document.getElementById('cloudStatusText');
+                const dot = document.getElementById('cloudStatusDot');
+                const ping = document.getElementById('cloudPingBadge');
+                if (banner) banner.style.borderColor = '#38bdf8';
+                if (dot) {
+                    dot.style.background = '#38bdf8';
+                    dot.style.boxShadow = '0 0 12px #38bdf8';
+                }
+                if (text) {
+                    text.innerHTML = '<strong style="color: #38bdf8;">🔵 Robô Conectado via Bluetooth (BLE):</strong> Comandos diretos pelo Bluetooth do celular/PC com zero atraso e sem depender de Wi-Fi!';
+                }
+                if (ping) {
+                    ping.style.borderColor = '#38bdf8';
+                    ping.style.color = '#38bdf8';
+                    ping.innerText = '🔵 BLE: Ativo';
+                }
+            } else {
+                if (btn) {
+                    btn.innerHTML = '🔵 Conectar Bluetooth (BLE)';
+                    btn.style.background = '#0284c7';
+                    btn.style.borderColor = '#38bdf8';
+                }
+                if (headerBtn) {
+                    headerBtn.innerHTML = '🔵 Parear Bluetooth (BLE)';
+                    headerBtn.style.background = '#0284c7';
+                    headerBtn.style.borderColor = '#38bdf8';
+                }
+                if (badge) {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        // ==========================================
         // COMUNICAÇÃO SERIAL (WEB SERIAL API & BRIDGE)
         // ==========================================
         let webSerialPort = null;
@@ -3714,10 +3857,22 @@
         async function sendEsp32Command(cmd) {
             if (!cmd) return;
 
-            // Modo Principal: Envio 100% sem fio via Nuvem Hostinger (API)
+            // 1. Se conectado via Bluetooth Low Energy (BLE), envia com prioridade instantânea
+            if (isBleConnected && bleRxCharacteristic) {
+                try {
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(cmd + '\n');
+                    await bleRxCharacteristic.writeValue(data);
+                    appendTerminalLine(new Date().toLocaleTimeString('pt-BR'), `[BLUETOOTH BLE] ➔ ${cmd}`, 'sent');
+                } catch (err) {
+                    console.warn("Erro ao enviar BLE:", err);
+                }
+            }
+
+            // 2. Modo Sem Fio via Nuvem Hostinger (API)
             sendViaCloudApi(cmd);
 
-            // Se o usuário estiver opcionalmente conectado via cabo USB, também replica
+            // 3. Se conectado via cabo USB (Web Serial), replica
             if (isWebSerialConnected && webSerialPort && webSerialPort.writable) {
                 try {
                     const encoder = new TextEncoder();

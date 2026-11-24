@@ -14,6 +14,7 @@
 #include "pitches.h"
 #include "songs_8bit.h"
 #include "graphics_oled.h"
+#include "ble_comm.h"
 
 // Desativa macros conflitantes do RoboEyes com templates
 #ifdef N
@@ -998,6 +999,9 @@ void setup() {
     roboEyes.setAutoblinker(ON, 3, 2);
     roboEyes.setIdleMode(ON, 2, 2);
 
+    // Inicialização do Bluetooth Low Energy (BLE 5.0) para conexão direta com Celular/Web
+    setupBle();
+
     // Sincronização de horário NTP com fuso horário de Brasília (UTC-3)
     configTime(-3 * 3600, 0, "pool.ntp.org", "time.google.com");
 
@@ -1074,7 +1078,7 @@ void setup() {
             cachedWifi = (WiFi.status() == WL_CONNECTED);
             if (cachedWifi) cachedRssi = WiFi.RSSI();
         }
-        drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString(), currentMarqueeTitle);
+        drawStatusBar(*disp, cachedWifi, cachedRssi, getTimeString(), currentMarqueeTitle, bleConnected);
     };
 
     // Inicia a tarefa de polling da nuvem no Core 0 (libera 100% o Core 1 para gráficos!)
@@ -1123,6 +1127,23 @@ void loop() {
     if (Serial.available()) {
         String cmd = Serial.readStringUntil('\n');
         executeRobotCommand(cmd);
+    }
+
+    // Executa comando remoto recebido via Bluetooth Low Energy (BLE)
+    if (pendingBleCmd) {
+        char cmdToRun[128];
+        portENTER_CRITICAL(&bleMux);
+        strncpy(cmdToRun, bleCmdBuffer, sizeof(cmdToRun) - 1);
+        cmdToRun[sizeof(cmdToRun) - 1] = '\0';
+        pendingBleCmd = false;
+        portEXIT_CRITICAL(&bleMux);
+
+        Serial.println("[Bluetooth BLE] 📡 Executando comando recebido: " + String(cmdToRun));
+        rgbLedWrite(RGB_BUILTIN, 0, 150, 255); // Pulso ciano
+        executeRobotCommand(String(cmdToRun));
+        bleSendTelemetry("ACK:" + String(cmdToRun));
+        delay(40);
+        rgbLedWrite(RGB_BUILTIN, 0, 0, 0);
     }
 
     // Executa comando remoto recebido da nuvem pelo Core 0

@@ -531,7 +531,7 @@ inline void drawTakeOnMeScene(int step, Adafruit_SSD1306 &disp) {
 // -------------------------------------------------------------
 // Barra de Status Superior do OLED: Medidor de Sinal Wi-Fi, Letreiro Rolante e Relógio
 // -------------------------------------------------------------
-inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr, const char* marqueeText = nullptr) {
+inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi, const char* timeStr, const char* marqueeText = nullptr, bool isBleConnected = false) {
     disp.setTextWrap(false);
     disp.setTextSize(1);
     disp.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
@@ -575,10 +575,19 @@ inline void drawStatusBar(Adafruit_SSD1306 &disp, bool isWifiConnected, int rssi
     }
 
     if (!isWifiConnected) {
-        // Ícone de Desconectado: 'X' de alerta no medidor Wi-Fi
-        disp.drawLine(2, 3, 11, 9, SSD1306_WHITE);
-        disp.drawLine(2, 9, 11, 3, SSD1306_WHITE);
-        disp.drawPixel(13, 9, SSD1306_WHITE); // ponto de atenção
+        if (isBleConnected) {
+            // Ícone Bluetooth BLE ativo (Runa nórdica / dente azul)
+            disp.drawLine(6, 1, 6, 9, SSD1306_WHITE);
+            disp.drawLine(6, 1, 10, 4, SSD1306_WHITE);
+            disp.drawLine(10, 4, 3, 7, SSD1306_WHITE);
+            disp.drawLine(3, 3, 10, 6, SSD1306_WHITE);
+            disp.drawLine(10, 6, 6, 9, SSD1306_WHITE);
+        } else {
+            // Ícone de Desconectado: 'X' de alerta no medidor Wi-Fi
+            disp.drawLine(2, 3, 11, 9, SSD1306_WHITE);
+            disp.drawLine(2, 9, 11, 3, SSD1306_WHITE);
+            disp.drawPixel(13, 9, SSD1306_WHITE); // ponto de atenção
+        }
     } else {
         // Barra 1 (3px de altura): x=2..3, y=8..10
         if (bars >= 1) disp.fillRect(2, 8, 2, 3, SSD1306_WHITE);
