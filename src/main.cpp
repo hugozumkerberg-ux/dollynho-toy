@@ -59,8 +59,15 @@ unsigned long lastStatusBarTime = 0;
 
 const char* getTimeString() {
     static char buf[10] = "12:00";
+    static unsigned long lastCheck = 0;
+    unsigned long now = millis();
+    if (now - lastCheck < 1000 && lastCheck != 0) {
+        return buf;
+    }
+    lastCheck = now;
+
     struct tm timeinfo;
-    if (getLocalTime(&timeinfo, 10)) {
+    if (WiFi.status() == WL_CONNECTED && getLocalTime(&timeinfo, 5)) {
         strftime(buf, sizeof(buf), "%H:%M", &timeinfo);
         return buf;
     }
@@ -486,6 +493,11 @@ void setup() {
         roboEyes.setMood(DEFAULT);
     }
 
+    // Hook de overlay para desenhar a barra de status no mesmo buffer dos olhos (sem flicker)
+    roboEyes.onDrawOverlay = [](Adafruit_SSD1306* disp) {
+        drawStatusBar(*disp, WiFi.status() == WL_CONNECTED, WiFi.RSSI(), getTimeString());
+    };
+
     // Garante LEDs 100% desligados
     ledsOff();
 }
@@ -499,13 +511,7 @@ void loop() {
             showingText = false;
         }
     } else {
-        unsigned long prevTimer = roboEyes.fpsTimer;
         roboEyes.update();
-        if (roboEyes.fpsTimer != prevTimer || (now - lastStatusBarTime > 1000)) {
-            lastStatusBarTime = now;
-            drawStatusBar(display, WiFi.status() == WL_CONNECTED, WiFi.RSSI(), getTimeString());
-            display.display();
-        }
     }
 
     // Consulta periódica da BBAS3 a cada 5 minutos
